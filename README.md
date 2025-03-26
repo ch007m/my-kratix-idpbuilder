@@ -46,6 +46,7 @@ kind create cluster --name worker-1
 set -x WORKER kind-worker-1
 
 kubectl --context {$WORKER} create ns argocd
+kubectl --context {$WORKER} apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 helm --kube-context {$WORKER} install kratix-destination ./helm-kratix-destination/ -f worker-1-values.yml
 
 kubectl --context {$WORKER} get applications -A

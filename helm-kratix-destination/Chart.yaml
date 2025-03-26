@@ -23,13 +23,3 @@ version: 0.0.1
 # It is recommended to use it with quotes.
 appVersion: "0.0.1"
 
-dependencies:
-  #- name: flux2
-  #  # only install flux if specified in values file
-  #  condition: installFlux
-  #  version: 2.5.1
-  - name: argo-cd
-    condition: installArgo
-    repository: https://argoproj.github.io/argo-helm
-    version: 7.8.14
-
