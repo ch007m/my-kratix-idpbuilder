@@ -51,8 +51,8 @@ helm --kube-context {$WORKER} install kratix-destination ./helm-kratix-destinati
 
 kubectl --context {$WORKER} get applications -A
 NAMESPACE   NAME                           SYNC STATUS   HEALTH STATUS
-argocd      kratix-workload-dependencies                 
-argocd      kratix-workload-resources  
+argocd      kratix-workload-dependencies   Unknown       Healthy
+argocd      kratix-workload-resources      Unknown       Healthy
 ```
 
 To uninstall the helm release, delete the cluster, etc
