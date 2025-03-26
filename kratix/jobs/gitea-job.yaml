@@ -1,0 +1,60 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: gitea-state-repo
+  namespace: kratix
+spec:
+  template:
+    metadata:
+      generateName: gitea-state-repo
+    spec:
+      serviceAccountName: kratix-job
+      restartPolicy: Never
+      containers:
+        - name: provision-gitea
+          image: quay.io/curl/curl
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              #! /bin/bash
+              echo "### Set env variables to access gitea"
+              export GITEA_API_URL="https://gitea.cnoe.localtest.me:8443/api"
+              export GITEA_USERNAME="giteaAdmin"
+              export GITEA_PASSWORD="developer"
+              
+              set +e
+              echo "### Creating the kratix org"
+              export ORG_NAME="kratix"
+              RESULT=$(curl -kv -X POST "$GITEA_API_URL/v1/orgs" \
+                -H 'accept: application/json' -H 'Content-Type: application/json' \
+                -u "$GITEA_USERNAME:$GITEA_PASSWORD" \
+                -d '{"username": "'"$ORG_NAME"'"}' 2>&1)
+              if [ $? -ne 0 ]; then
+                echo "curl command failed with the following error:"
+                echo "$RESULT"
+                exit 1
+              fi
+              
+              echo "### Creating the kratix repository to store the state"
+              export ORG_NAME="kratix"
+              export REPO_NAME "state"
+              export REPO_DESCRIPTION "Kratix state repository"
+              
+              RESULT=$(curl -kv "$GITEA_API_URL/v1/orgs/$ORG_NAME/repos" \
+                 -H 'accept: application/json' -H 'Content-Type: application/json' \
+                 -u "$GITEA_USERNAME:$GITEA_PASSWORD" \
+                 -d '{
+                 "auto_init": true,
+                 "default_branch": "main",
+                 "description": "'"$REPO_DESCRIPTION"'",
+                 "name": "'"$REPO_NAME"'",
+                 "readme": "Default",
+                 "private": false
+                }' 2>&1)
+              if [ $? -ne 0 ]; then
+                echo "curl command failed with the following error:"
+                echo "$RESULT"
+                exit 1
+              fi
+              
+              set -e
