@@ -38,3 +38,22 @@ PGPASSWORD=$(kubectl get secret postgres.acid-example-postgresql.credentials.pos
 PGUSER=$(kubectl get secret postgres.acid-example-postgresql.credentials.postgresql.acid.zalan.do -o 'jsonpath={.data.username}' | base64 -d) \
 psql bestdb"
 ```
+
+## Adding some workers
+
+```shell
+kind delete cluster --name worker-1
+kind create cluster --name worker-1
+set -x WORKER kind-worker-1
+#kubectl --context {$WORKER} create ns kratix
+kubectl --context {$WORKER} create ns argocd
+helm --kube-context {$WORKER} uninstall kratix-destination
+helm --kube-context {$WORKER} install kratix-destination ./helm-kratix-destination/ -f worker-1-values.yml
+
+kubectl --context {$WORKER} get applications -A -w
+
+or 
+
+export WORKER=kind-worker-1
+helm --kube-context ${WORKER} install kratix-destination ./helm-kratix-destination/ -f worker-1-values.yml
+```
