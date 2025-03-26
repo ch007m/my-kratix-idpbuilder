@@ -44,11 +44,14 @@ spec:
 ---
 apiVersion: v1
 kind: Secret
+type: Opaque
 metadata:
   name: gitea
   namespace: argocd
   labels:
     argocd.argoproj.io/secret-type: repository
+  annotations:
+    managed-by: argocd.argoproj.io
 stringData:
   type: "git"
   url: "https://gitea.cnoe.localtest.me:8443/kratix/state"

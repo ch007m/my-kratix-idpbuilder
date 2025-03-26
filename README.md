@@ -42,18 +42,21 @@ psql bestdb"
 ## Adding some workers
 
 ```shell
-kind delete cluster --name worker-1
 kind create cluster --name worker-1
 set -x WORKER kind-worker-1
-#kubectl --context {$WORKER} create ns kratix
+
 kubectl --context {$WORKER} create ns argocd
-helm --kube-context {$WORKER} uninstall kratix-destination
 helm --kube-context {$WORKER} install kratix-destination ./helm-kratix-destination/ -f worker-1-values.yml
 
-kubectl --context {$WORKER} get applications -A -w
-
-or 
-
-export WORKER=kind-worker-1
-helm --kube-context ${WORKER} install kratix-destination ./helm-kratix-destination/ -f worker-1-values.yml
+kubectl --context {$WORKER} get applications -A
+NAMESPACE   NAME                           SYNC STATUS   HEALTH STATUS
+argocd      kratix-workload-dependencies                 
+argocd      kratix-workload-resources  
 ```
+
+To uninstall the helm release, delete the cluster, etc
+```shell
+helm --kube-context {$WORKER} uninstall kratix-destination
+kind delete cluster --name worker-1
+```
+
