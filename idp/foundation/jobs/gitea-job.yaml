@@ -2,7 +2,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: gitea-state-repo
-  namespace: kratix
+  namespace: kratix-platform-system
 spec:
   template:
     metadata:
@@ -12,7 +12,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: provision-gitea
-          image: quay.io/curl/curl
+          image: registry.access.redhat.com/ubi9
           command: ["/bin/bash", "-c"]
           args:
             - |
@@ -37,8 +37,8 @@ spec:
               
               echo "### Creating the kratix repository to store the state"
               export ORG_NAME="kratix"
-              export REPO_NAME "state"
-              export REPO_DESCRIPTION "Kratix state repository"
+              export REPO_NAME="state"
+              export REPO_DESCRIPTION="Kratix state repository"
               
               RESULT=$(curl -kv "$GITEA_API_URL/v1/orgs/$ORG_NAME/repos" \
                  -H 'accept: application/json' -H 'Content-Type: application/json' \
@@ -50,7 +50,7 @@ spec:
                  "name": "'"$REPO_NAME"'",
                  "readme": "Default",
                  "private": false
-                }' 2>&1)
+                 }' 2>&1)
               if [ $? -ne 0 ]; then
                 echo "curl command failed with the following error:"
                 echo "$RESULT"

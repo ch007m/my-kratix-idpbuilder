@@ -4,8 +4,8 @@
 
 Use idpbuilder tool
 ```
-idp create --color --recreate --name kratix --port 8443 --dev-password \
-  -p kratix
+idp create --recreate --color --name kratix --port 8443 --dev-password -p idp/foundation -p idp/kratix
+idp create --color --name kratix --port 8443 --dev-password -p idp/foundation -p idp/kratix
 ```
 
 ## Deploy the postgresql promise
