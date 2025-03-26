@@ -19,7 +19,7 @@ argocd-initial-admin-secret   argocd      admin        developer
 gitea-credential              gitea       giteaAdmin   developer   34d333ee4330d441c3da782fd4bc443a848e5a1b   
 ```
 
-**Remark**: This project only at the moment create a single kind cluster !
+**Remark**: This project only support at the moment to create a single kind cluster !
 
 ## Test the IDPlatform with a Postgresql promise  
 
