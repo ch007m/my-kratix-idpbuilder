@@ -1,6 +1,4 @@
-## Instructions
-
-## Kratix and idpbuilder
+# Kratix and idpbuilder
 
 The purpose of this project is to demonstrate that we can use [idpbuilder](https://cnoe.io/docs/intro/idpbuilder) as IDPlatform to install [Kratix](https://docs.kratix.io) with fewer efforts as it is needed when using bash scripts or manual steps.
 
