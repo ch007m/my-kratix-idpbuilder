@@ -73,16 +73,18 @@ New test using idpbuilder and vCluster
 ```text
 idp create --dev-password --name kratix-vcluster --recreate --color
 
-vcluster create worker-1 -n worker-1
+vcluster create worker-1 -n worker-1 -f values.yml
 vcluster disconnect
-vcluster create worker-2 -n worker-2
+vcluster create worker-2 -n worker-2 -f values.yml
 
 // context is now: vcluster_worker-2_worker-2_kind-kratix-vcluster
-
 k create ns argocd
 k apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 // Create some applications CR
 k apply -f kratix-destination/
+
+vcluster delete worker-1
+vcluster delete worker-2
 ```
 
 
