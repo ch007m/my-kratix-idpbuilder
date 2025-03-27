@@ -55,9 +55,15 @@ argocd      kratix-workload-dependencies   Unknown       Healthy
 argocd      kratix-workload-resources      Unknown       Healthy
 ```
 
+TODO: Error to be fixed:
+```text
+Message: Failed to load target state: failed to generate manifest for source 1 of 1: rpc error: code = Unknown desc = failed to list refs: Get "https://gitea.cnoe.localtest.me:8443/kratix/state/info/refs?service=git-upload-pack": dial tcp 127.0.0.1:8443: connect: connection refused
+```
+
 To uninstall the helm release, delete the cluster, etc
 ```shell
 #helm --kube-context {$WORKER} uninstall kratix-destination
 kind delete cluster --name worker-1
 ```
+
 
