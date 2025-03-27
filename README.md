@@ -66,14 +66,23 @@ To uninstall the helm release, delete the cluster, etc
 kind delete cluster --name worker-1
 ```
 
-New test using idpbuilder
+## Idpbuilder and vcluster
+
+New test using idpbuilder and vCluster
 
 ```text
-idp create --dev-password --port 7443 --name worker1 --recreate --color
-idp create --dev-password --name worker2 --port 9443 --recreate --color --kind-config kind-worker2.cfg
+idp create --dev-password --name kratix-vcluster --recreate --color
 
-set -x WORKER kind-worker2
-kubectl --context {$WORKER} apply -f kratix-destination/
+vcluster create worker-1 -n worker-1
+vcluster disconnect
+vcluster create worker-2 -n worker-2
+
+// context is now: vcluster_worker-2_worker-2_kind-kratix-vcluster
+
+k create ns argocd
+k apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+// Create some applications CR
+k apply -f kratix-destination/
 ```
 
 
