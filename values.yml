@@ -1,0 +1,20 @@
+#mapServices:
+#  fromHost:
+#    - from: gitea/my-gitea-http
+#      to: virt-gitea/virt-gitea-http
+controlPlane:
+  backingStore:
+    etcd:
+      deploy:
+        enabled: true
+  distro:
+    k8s:
+      enabled: true
+  statefulSet:
+    scheduling:
+      podManagementPolicy: OrderedReady
+networking:
+  replicateServices:
+    fromHost:
+      - from: gitea/my-gitea-http
+        to: virt-gitea/virt-gitea-http
