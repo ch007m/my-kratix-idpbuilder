@@ -7,7 +7,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: http://virt-gitea/virt-gitea-http:3000/kratix/state #https://gitea.cnoe.localtest.me:8443/kratix/state/kratix/state
+    repoURL: http://virt-gitea-http.virt-gitea-namespace:3000/kratix/state
     targetRevision: HEAD
     path: ./platform/dependencies
     directory:
@@ -28,7 +28,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: http://virt-gitea/virt-gitea-http:3000/kratix/state #https://gitea.cnoe.localtest.me:8443/kratix/state/kratix/state
+    repoURL: http://virt-gitea-http.virt-gitea-namespace:3000/kratix/state
     targetRevision: HEAD
     path: ./platform/resources
     directory:
@@ -53,7 +53,7 @@ metadata:
     managed-by: argocd.argoproj.io
 stringData:
   type: "git"
-  url: http://virt-gitea/virt-gitea-http:3000/kratix/state #https://gitea.cnoe.localtest.me:8443/kratix/state/kratix/state
+  url: http://virt-gitea-http.virt-gitea-namespace:3000/kratix/state
   password: "developer"
   username: "giteaAdmin"
   insecure: "true"

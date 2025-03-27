@@ -17,4 +17,4 @@ networking:
   replicateServices:
     fromHost:
       - from: gitea/my-gitea-http
-        to: virt-gitea/virt-gitea-http
+        to: virt-gitea-namespace/virt-gitea-http

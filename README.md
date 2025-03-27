@@ -74,31 +74,71 @@ New test using idpbuilder and vCluster
 idp create --dev-password --name kratix-vcluster --recreate --color
 
 vcluster create worker-1 -n worker-1 -f values.yml
-vcluster disconnect
-vcluster create worker-2 -n worker-2 -f values.yml
 
-// context is now: vcluster_worker-2_worker-2_kind-kratix-vcluster
+// context is now: vcluster_worker-1_worker-1_kind-kratix-vcluster
 k create ns argocd
 k apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 // Create some applications CR
 k apply -f kratix-destination/
 
 vcluster delete worker-1
-vcluster delete worker-2
 ```
 
-The issue that we have when Argocd access the internal service of gitea is `invalid auth`
-```text
-    Repo URL:         virt-gitea/virt-gitea-http:3000/kratix/state
-    Target Revision:  HEAD
-  Sync Policy:
-    Automated:
-      Prune:      true
-      Self Heal:  true
-Status:
-  Conditions:
-    Last Transition Time:  2025-03-27T16:58:32Z
-    Message:               Failed to load target state: failed to generate manifest for source 1 of 1: rpc error: code = Unknown desc = failed to list refs: invalid auth method
+The status of the Application status is not `sync` as the organization/repository `/kratix/state` don't exist:
+```❯ k get application/kratix-workload-dependencies -n argocd
+NAME                           SYNC STATUS   HEALTH STATUS
+kratix-workload-dependencies   Unknown       Healthy
+
+❯ k get application/kratix-workload-dependencies -n argocd -oyaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"argoproj.io/v1alpha1","kind":"Application","metadata":{"annotations":{},"name":"kratix-workload-dependencies","namespace":"argocd"},"spec":{"destination":{"namespace":"default","server":"https://kubernetes.default.svc"},"project":"default","source":{"directory":{"recurse":true},"path":"./platform/dependencies","repoURL":"http://virt-gitea-http.virt-gitea-namespace:3000/kratix/state","targetRevision":"HEAD"},"syncPolicy":{"automated":{"prune":true,"selfHeal":true}}}}
+  creationTimestamp: "2025-03-27T17:13:50Z"
+  generation: 3
+  name: kratix-workload-dependencies
+  namespace: argocd
+  resourceVersion: "648"
+  uid: 11739295-21e2-4051-8936-a78ef1247843
+spec:
+  destination:
+    namespace: default
+    server: https://kubernetes.default.svc
+  project: default
+  source:
+    directory:
+      recurse: true
+    path: ./platform/dependencies
+    repoURL: http://virt-gitea-http.virt-gitea-namespace:3000/kratix/state
+    targetRevision: HEAD
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+status:
+  conditions:
+  - lastTransitionTime: "2025-03-27T17:13:50Z"
+    message: |
+      Failed to load target state: failed to generate manifest for source 1 of 1: rpc error: code = Unknown desc = failed to list refs: repository not found: Not found.
+    type: ComparisonError
+  controllerNamespace: argocd
+  health:
+    lastTransitionTime: "2025-03-27T17:13:51Z"
+    status: Healthy
+  reconciledAt: "2025-03-27T17:13:50Z"
+  sync:
+    comparedTo:
+      destination:
+        namespace: default
+        server: https://kubernetes.default.svc
+      source:
+        directory:
+          jsonnet: {}
+          recurse: true
+        path: ./platform/dependencies
+        repoURL: http://virt-gitea-http.virt-gitea-namespace:3000/kratix/state
+        targetRevision: HEAD
+    status: Unknown
 ```
-
-
