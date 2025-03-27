@@ -87,4 +87,18 @@ vcluster delete worker-1
 vcluster delete worker-2
 ```
 
+The issue that we have when Argocd access the internal service of gitea is `invalid auth`
+```text
+    Repo URL:         virt-gitea/virt-gitea-http:3000/kratix/state
+    Target Revision:  HEAD
+  Sync Policy:
+    Automated:
+      Prune:      true
+      Self Heal:  true
+Status:
+  Conditions:
+    Last Transition Time:  2025-03-27T16:58:32Z
+    Message:               Failed to load target state: failed to generate manifest for source 1 of 1: rpc error: code = Unknown desc = failed to list refs: invalid auth method
+```
+
 
