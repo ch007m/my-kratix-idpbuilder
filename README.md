@@ -66,4 +66,14 @@ To uninstall the helm release, delete the cluster, etc
 kind delete cluster --name worker-1
 ```
 
+New test using idpbuilder
+
+```text
+idp create --dev-password --port 7443 --name worker1 --recreate --color
+idp create --dev-password --name worker2 --port 9443 --recreate --color --kind-config kind-worker2.cfg
+
+set -x WORKER kind-worker2
+kubectl --context {$WORKER} apply -f kratix-destination/
+```
+
 
