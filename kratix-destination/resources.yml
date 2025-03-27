@@ -1,0 +1,59 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kratix-workload-dependencies
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://gitea.cnoe.localtest.me:8443/kratix/state
+    targetRevision: HEAD
+    path: ./platform/dependencies
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc # in-cluster reconcile
+    namespace: default # The namespace will only be set for namespace-scoped resources without a value for .metadata.namespace
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kratix-workload-resources
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://gitea.cnoe.localtest.me:8443/kratix/state
+    targetRevision: HEAD
+    path: ./platform/resources
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc # in-cluster reconcile
+    namespace: default # The namespace will only be set for namespace-scoped resources without a value for .metadata.namespace
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: true
+---
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: gitea
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repository
+  annotations:
+    managed-by: argocd.argoproj.io
+stringData:
+  type: "git"
+  url: "https://gitea.cnoe.localtest.me:8443/kratix/state"
+  password: "developer"
+  username: "giteaAdmin"
+  insecure: "true"
