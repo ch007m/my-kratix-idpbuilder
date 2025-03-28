@@ -19,8 +19,6 @@ argocd-initial-admin-secret   argocd      admin        developer
 gitea-credential              gitea       giteaAdmin   developer   34d333ee4330d441c3da782fd4bc443a848e5a1b   
 ```
 
-**Remark**: This project only support at the moment to create a single kind cluster !
-
 ## Test the IDPlatform with a Postgresql promise  
 
 To validate that the platform is working and can operate `promises`, execute the following commands:
@@ -39,15 +37,13 @@ PGUSER=$(kubectl get secret postgres.acid-example-postgresql.credentials.postgre
 psql bestdb"
 ```
 
-## Idpbuilder and vcluster
+## Add new destinations
 
-New test using idpbuilder and vCluster
+To simulate a more natural environment running in a company, we will now create some additional clusters representing either the `dev`, `test` and `prod` machines or different machines created for: `team-1`, team-2` having different needs, services that kratix can operatate using Promises and requests
 
-Create first the IDPlatform cluster running: gitea, argocd and kratix
-```text
-idpbuilder create --recreate --color --name kratix --port 8443 --dev-password -p idp/foundation -p idp/kratix
-```
-When the pods are and running, we will now create 2 vclusters:
+For that purpose we will create top of our IDPlatform cluster some additional clusters using vcluster - https://www.vcluster.com/docs
+
+So let's create a first cluster named `worker-1`
 ```shell
 # The following command create a vcluster named worker-1 where argocd is deployed (see values file)
 helm upgrade worker-1 loft-sh/vcluster -n worker-1 --create-namespace --install -f values.yml
@@ -60,7 +56,7 @@ k --context "$WORKER1" apply -f kratix-destination/worker-1-resources.yml
 vcluster disconnect
 ```
 
-Repeat now the operation for the vcluster `worker-2`
+Repeat the operation for the vcluster `worker-2`
 ```shell
 helm upgrade worker-2 loft-sh/vcluster -n worker-2 --create-namespace --install -f values.yml
 
