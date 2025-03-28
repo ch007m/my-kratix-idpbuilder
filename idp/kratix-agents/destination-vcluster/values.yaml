@@ -1,0 +1,13 @@
+# Values to configure the resources:
+# Application CR - kratix dependencies
+# Application CR - kratix resources
+# Secret         - Gitea server credentials
+
+clusterName: worker-1
+giteaServer:
+  url: http://virt-gitea-http.virt-gitea-namespace:3000
+  username: "giteaAdmin"
+  password: "developer"
+gitKratix:
+  org: kratix
+  repository: state

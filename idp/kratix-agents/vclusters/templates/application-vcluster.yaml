@@ -20,6 +20,16 @@ spec:
       helm:
         valueFiles:
           - {{ $root.Values.vcluster.helm.valuesFileUrl }}
+    - repoURL: {{ $root.Values.destinationResourcesVcluster.repoURL }}
+      targetRevision: {{ $root.Values.destinationResourcesVcluster.targetRevision }}
+      path: {{ $root.Values.destinationResourcesVcluster.path }}
+      helm:
+        valuesObject:
+          clusterName: {{ $cluster.name }}
+          gitKratix:
+            org: kratix
+            repository: state
+          # See destination-vcluster default values file
   destination:
     namespace: {{ $cluster.name }}
     server: {{ $root.Values.argocd.destination.server }}
