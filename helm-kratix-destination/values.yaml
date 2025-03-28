@@ -22,5 +22,5 @@ vcluster:
   helm:
     repoURL: https://charts.loft.sh
     targetRevision: "0.24.0"
-    valuesFileUrl:
+    valuesFileUrl: https://raw.githubusercontent.com/ch007m/my-kratix-idpbuilder/refs/heads/main/helm-kratix-destination/files/vcluster-config.yaml
 #####

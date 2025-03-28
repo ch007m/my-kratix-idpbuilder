@@ -9,6 +9,7 @@ metadata:
   name: {{ $cluster.name }}
   namespace: argocd
   labels:
+    vcluster: {{ $cluster.name }}
     organization: {{ $cluster.organization }}
 spec:
   project: {{ $root.Values.argocd.project }}
@@ -18,7 +19,7 @@ spec:
       targetRevision: {{ $root.Values.vcluster.helm.targetRevision }}
       helm:
         valueFiles:
-          - {{- $root.Values.vcluster.helm.configUrl }}
+          - {{ $root.Values.vcluster.helm.valuesFileUrl }}
   destination:
     namespace: {{ $cluster.name }}
     server: {{ $root.Values.argocd.destination.server }}

@@ -1,11 +1,12 @@
-# vcluster configuration based on k8s distro
+#
+# vcluster kratix agent configuration based on k8s distro
 #
 # It includes part of the networking section a replicateService able to
-# make the idpbuilder gitea server accessbile from a  vcluster:
+# make the idpbuilder gitea server accessible from a vcluster:
 #
-# Host kubernetes service: my-gitea-http.gitea
-# is translated into to
+# Host kubernetes service: my-gitea-http.gitea is translated into the
 # vcluster kubernetes service: virt-gitea-http.virt-gitea-namespace
+#
 #
 controlPlane:
   backingStore:
