@@ -2,16 +2,23 @@
 
 The purpose of this project is to demonstrate that we can use [idpbuilder](https://cnoe.io/docs/intro/idpbuilder) as IDPlatform to install [Kratix](https://docs.kratix.io) with fewer efforts as it is needed when using bash scripts or manual steps.
 
-For that purpose, different Argo CD Applications manifests have been created in order to install the `foundation` needed to operate Kratix
-which is currently: `cert-manager` and to create top of the existing gitea server a new git organization: `kratix` and repository: `platform`
-to let Kratix to handle the resources to be installed using Promises.
+Such a process is simplified as the tool `idpbuilder` allows a user to create locally a kind cluster embedding: Argo CD, Gitea and Nginx ingress 
+and where we can easily deploy Kratix.
 
-To create a local kind cluster embedding: Argocd, Gitea, Nginx ingress and Kratix, execute the following command:
+For that purpose, different Argo CD Applications manifests have been created under the path `idp/<PACKAGE_NAME>` in order to provision the cluster with the following packages:
+- `foundation`: installing the mandatory components like: cert-manager, ...
+- `kratix`: Deploy the kratix's controller; some default `Destination` and `GitstateStore` resources and register on the gitea server a new git organization: `kratix` and repository: `state`
+
+To create such an IDPlatform, execute the following command:
 ```
-idpbuilder create --recreate --color --name kratix --port 8443 --dev-password -p idp/foundation -p idp/kratix
+idpbuilder create --recreate --color --dev-password \
+  --name kratix \
+  --port 8443 \
+  -p idp/foundation \
+  -p idp/kratix
 ```
 
-When done, you can access the Argo CD  https://argocd.cnoe.localtest.me:8443 or Gitea - https://gitea.cnoe.localtest.me:8443 dashboards using the following credentials:
+When done, you can access the Argo CD: https://argocd.cnoe.localtest.me:8443 or Gitea - https://gitea.cnoe.localtest.me:8443 dashboards using the following credentials:
 ```shell
 ❯ idp get secrets
 NAME                          NAMESPACE   USERNAME     PASSWORD    TOKEN                                      DATA
@@ -39,9 +46,9 @@ psql bestdb"
 
 ## Add new destinations
 
-To simulate a more natural environment running in a company, we will now create some additional clusters representing either the `dev`, `test` and `prod` machines or different machines created for: `team-1`, team-2` having different needs, services that kratix can operatate using Promises and requests
+To simulate a more natural environment running in a company, we will now create some additional clusters representing either the `dev`, `test` and `prod` machines or different machines created for: `team-1`, `team-2` having different needs, services that kratix can deal with using `Promises` and `requests`.
 
-For that purpose we will create top of our IDPlatform cluster some additional clusters using vcluster - https://www.vcluster.com/docs
+For that purpose we will create top of the IDPlatform cluster some additional clusters using vcluster - https://www.vcluster.com/docs
 
 So let's create a first cluster named `worker-1`
 ```shell
@@ -71,12 +78,11 @@ vcluster disconnect
 To uninstall a vcluster: `helm uninstall worker-2 -n worker-2`
 
 TODO:
-- See with kratix's project how we could populate the needed sub-folders when we register new destinations !
 - Use argocd to install the resources of the kratix's agent instead of deploying them manually with the command `k --context "$WORKER1" apply -f kratix-destination/worker-1-resources.yml`
 - Generate using a template engine (aka helm) the resources to be created to:
   - Create a vcluster, deploy argocd
-  - Install on the vcluster the generated resources: Argo Applications and Secret to access git server
-  - Create and execute a new job able to create for the existing git server under the org/repository: `kratix/state` the folder of the new destination (aka vcluster) where the resources will be generated when promise's requests are issued against a specific destination
+  - Install on the vcluster the generated resources: Argo Applications and Secret to access the gitea server
+  - Create and execute a new job able to add on the existing gitea server (under the org/repository: `kratix/state`) the folder of the new destination (aka vcluster)
   - Create for the IDPlatform running Kratix new resources: Destination & GitStateStore to register a new destination (aka vcluster)
 
 ## DEPRECATED: Adding some kind workers
