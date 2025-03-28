@@ -73,6 +73,11 @@ To uninstall a vcluster: `helm uninstall worker-2 -n worker-2`
 TODO:
 - See with kratix's project how we could populate the needed sub-folders when we register new destinations !
 - Use argocd to install the resources of the kratix's agent instead of deploying them manually with the command `k --context "$WORKER1" apply -f kratix-destination/worker-1-resources.yml`
+- Generate using a template engine (aka helm) the resources to be created to:
+  - Create a vcluster, deploy argocd
+  - Install on the vcluster the generated resources: Argo Applications and Secret to access git server
+  - Create and execute a new job able to create for the existing git server under the org/repository: `kratix/state` the folder of the new destination (aka vcluster) where the resources will be generated when promise's requests are issued against a specific destination
+  - Create for the IDPlatform running Kratix new resources: Destination & GitStateStore to register a new destination (aka vcluster)
 
 ## DEPRECATED: Adding some kind workers
 
