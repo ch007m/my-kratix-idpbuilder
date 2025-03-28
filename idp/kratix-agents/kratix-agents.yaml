@@ -25,7 +25,7 @@ spec:
           helm:
             repoURL: https://charts.loft.sh
             targetRevision: "0.24.0"
-            valuesFileUrl: https://raw.githubusercontent.com/ch007m/my-kratix-idpbuilder/refs/heads/main/helm-kratix-agents/files/vcluster-config.yaml
+            valuesFileUrl: https://raw.githubusercontent.com/ch007m/my-kratix-idpbuilder/refs/heads/main/idp/kratix-agents/vclusters/files/vcluster-config.yaml
         # vclusters and destinations to be created
         clusters:
           - name: worker-1
