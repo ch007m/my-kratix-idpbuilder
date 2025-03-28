@@ -39,7 +39,46 @@ PGUSER=$(kubectl get secret postgres.acid-example-postgresql.credentials.postgre
 psql bestdb"
 ```
 
-## Adding some workers
+## Idpbuilder and vcluster
+
+New test using idpbuilder and vCluster
+
+Create first the IDPlatform cluster running: gitea, argocd and kratix
+```text
+idpbuilder create --recreate --color --name kratix --port 8443 --dev-password -p idp/foundation -p idp/kratix
+```
+When the pods are and running, we will now create 2 vclusters:
+```shell
+# The following command create a vcluster named worker-1 where argocd is deployed (see values file)
+helm upgrade worker-1 loft-sh/vcluster -n worker-1 --create-namespace --install -f values.yml
+
+# This step will create the Application CR and Secret to let Argocd to deploy resources within the vcluster
+# from the git server
+vcluster connect worker-1
+set -x WORKER1 vcluster_worker-1_worker-1_kind-kratix
+k --context "$WORKER1" apply -f kratix-destination/worker-1-resources.yml
+vcluster disconnect
+```
+
+Repeat now the operation for the vcluster `worker-2`
+```shell
+helm upgrade worker-2 loft-sh/vcluster -n worker-2 --create-namespace --install -f values.yml
+
+vcluster connect worker-2
+set -x WORKER2 vcluster_worker-2_worker-2_kind-kratix
+k --context "$WORKER2" apply -f kratix-destination/worker-2-resources.yml
+vcluster disconnect
+```
+
+**Note**: To access the cluster, it is needed to execute the command: `vcluster connect worker-2` responsible to create a kubectl's container acting as proxy able to access from your laptop the vcluster.
+
+To uninstall a vcluster: `helm uninstall worker-2 -n worker-2`
+
+TODO:
+- See with kratix's project how we could populate the needed sub-folders when we register new destinations !
+- Use argocd to install the resources of the kratix's agent instead of deploying them manually with the command `k --context "$WORKER1" apply -f kratix-destination/worker-1-resources.yml`
+
+## DEPRECATED: Adding some kind workers
 
 ```shell
 kind create cluster --name worker-1
@@ -64,89 +103,4 @@ To uninstall the helm release, delete the cluster, etc
 ```shell
 #helm --kube-context {$WORKER} uninstall kratix-destination
 kind delete cluster --name worker-1
-```
-
-## Idpbuilder and vcluster
-
-New test using idpbuilder and vCluster
-
-```text
-idpbuilder create --recreate --color --name kratix --port 8443 --dev-password -p idp/foundation -p idp/kratix
-
-vcluster create worker-2 -n worker-2 -f values.yml
-vcluster disconnect
-
-set -x WORKER2 vcluster_worker-2_worker-2_kind-kratix
-k --context "$WORKER2" create ns argocd
-k --context "$WORKER2" apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-k --context "$WORKER2" apply -f kratix-destination/
-
-# Repeat now with vcluster-1
-vcluster disconnect
-vcluster create worker-1 -n worker-1 -f values.yml
-
-set -x WORKER1 vcluster_worker-1_worker-1_kind-kratix
-k --context "$WORKER1" create ns argocd
-k --context "$WORKER1" apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-
-k --context "$WORKER1" apply -f kratix-destination/
-```
-
-The status of the Application status is not `sync` as the organization/repository `/kratix/state` don't exist:
-```❯ k get application/kratix-workload-dependencies -n argocd
-NAME                           SYNC STATUS   HEALTH STATUS
-kratix-workload-dependencies   Unknown       Healthy
-
-❯ k get application/kratix-workload-dependencies -n argocd -oyaml
-apiVersion: argoproj.io/v1alpha1
-kind: Application
-metadata:
-  annotations:
-    kubectl.kubernetes.io/last-applied-configuration: |
-      {"apiVersion":"argoproj.io/v1alpha1","kind":"Application","metadata":{"annotations":{},"name":"kratix-workload-dependencies","namespace":"argocd"},"spec":{"destination":{"namespace":"default","server":"https://kubernetes.default.svc"},"project":"default","source":{"directory":{"recurse":true},"path":"./platform/dependencies","repoURL":"http://virt-gitea-http.virt-gitea-namespace:3000/kratix/state","targetRevision":"HEAD"},"syncPolicy":{"automated":{"prune":true,"selfHeal":true}}}}
-  creationTimestamp: "2025-03-27T17:13:50Z"
-  generation: 3
-  name: kratix-workload-dependencies
-  namespace: argocd
-  resourceVersion: "648"
-  uid: 11739295-21e2-4051-8936-a78ef1247843
-spec:
-  destination:
-    namespace: default
-    server: https://kubernetes.default.svc
-  project: default
-  source:
-    directory:
-      recurse: true
-    path: ./platform/dependencies
-    repoURL: http://virt-gitea-http.virt-gitea-namespace:3000/kratix/state
-    targetRevision: HEAD
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-status:
-  conditions:
-  - lastTransitionTime: "2025-03-27T17:13:50Z"
-    message: |
-      Failed to load target state: failed to generate manifest for source 1 of 1: rpc error: code = Unknown desc = failed to list refs: repository not found: Not found.
-    type: ComparisonError
-  controllerNamespace: argocd
-  health:
-    lastTransitionTime: "2025-03-27T17:13:51Z"
-    status: Healthy
-  reconciledAt: "2025-03-27T17:13:50Z"
-  sync:
-    comparedTo:
-      destination:
-        namespace: default
-        server: https://kubernetes.default.svc
-      source:
-        directory:
-          jsonnet: {}
-          recurse: true
-        path: ./platform/dependencies
-        repoURL: http://virt-gitea-http.virt-gitea-namespace:3000/kratix/state
-        targetRevision: HEAD
-    status: Unknown
 ```

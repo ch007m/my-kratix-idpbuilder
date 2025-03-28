@@ -9,7 +9,7 @@ spec:
   source:
     repoURL: http://virt-gitea-http.virt-gitea-namespace:3000/kratix/state
     targetRevision: HEAD
-    path: ./platform/dependencies
+    path: ./worker-1/dependencies
     directory:
       recurse: true
   destination:
@@ -30,7 +30,7 @@ spec:
   source:
     repoURL: http://virt-gitea-http.virt-gitea-namespace:3000/kratix/state
     targetRevision: HEAD
-    path: ./platform/resources
+    path: ./worker-1/resources
     directory:
       recurse: true
   destination:

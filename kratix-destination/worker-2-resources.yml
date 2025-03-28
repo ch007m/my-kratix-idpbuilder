@@ -1,4 +1,3 @@
-{{ if .Values.installArgo }}
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -8,9 +7,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://gitea.cnoe.localtest.me:8443/kratix/state
+    repoURL: http://virt-gitea-http.virt-gitea-namespace:3000/kratix/state
     targetRevision: HEAD
-    path: ./platform/dependencies
+    path: ./worker-2/dependencies
     directory:
       recurse: true
   destination:
@@ -29,9 +28,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://gitea.cnoe.localtest.me:8443/kratix/state
+    repoURL: http://virt-gitea-http.virt-gitea-namespace:3000/kratix/state
     targetRevision: HEAD
-    path: ./platform/resources
+    path: ./worker-2/resources
     directory:
       recurse: true
   destination:
@@ -54,8 +53,7 @@ metadata:
     managed-by: argocd.argoproj.io
 stringData:
   type: "git"
-  url: "https://gitea.cnoe.localtest.me:8443/kratix/state"
+  url: http://virt-gitea-http.virt-gitea-namespace:3000/kratix/state
   password: "developer"
   username: "giteaAdmin"
   insecure: "true"
-{{ end }}
