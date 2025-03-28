@@ -53,7 +53,14 @@ For that purpose we will create top of the IDPlatform cluster some additional cl
 So let's create a first cluster named `worker-1`
 ```shell
 # The following command create a vcluster named worker-1 where argocd is deployed (see values file)
-helm upgrade worker-1 loft-sh/vcluster -n worker-1 --create-namespace --install -f values.yml
+#helm upgrade worker-1 loft-sh/vcluster -n worker-1 --create-namespace --install -f values.yml
+#helm install kratix-agents ./helm-kratix-agents
+idpbuilder create --color --dev-password \
+  --name kratix \
+  --port 8443 \
+  -p idp/foundation \
+  -p idp/kratix \
+  -p idp/kratix-agents
 
 # This step will create the Application CR and Secret to let Argocd to deploy resources within the vcluster
 # from the git server

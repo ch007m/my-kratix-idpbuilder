@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kratix-agents
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: kratix-agent
+spec:
+  destination:
+    server: "https://kubernetes.default.svc"
+  source:
+    - repoURL: https://github.com/ch007m/my-kratix-idpbuilder
+      targetRevision: HEAD
+      path: "helm-kratix-agents"
+      helm:
+        valueFiles:
+          - $values-repo/helm-values.yaml
+    - repoURL: 'https://github.com/ch007m/my-kratix-idpbuilder'
+      targetRevision: HEAD
+      path: idp/kratix-agents
+      ref: values-repo
+  project: default
+  syncPolicy:
+    automated:
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
