@@ -6,6 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/name: kratix-agents
 spec:
+  project: default
   destination:
     server: "https://kubernetes.default.svc"
   sources:
@@ -19,7 +20,6 @@ spec:
       targetRevision: HEAD
       path: idp/kratix-agents
       ref: values-repo
-  project: default
   syncPolicy:
     automated:
       selfHeal: true
