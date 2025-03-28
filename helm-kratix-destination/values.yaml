@@ -1,0 +1,26 @@
+# This is to override the chart name.
+nameOverride: ""
+fullnameOverride: ""
+
+argocd:
+  namespace: argocd
+  project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace:
+
+# vclusters and destinations to be created
+clusters:
+  - name: worker-1
+    path: worker-0
+    organization: team-a
+  - name: worker-2
+    path: worker-2
+    organization: team-b
+
+vcluster:
+  helm:
+    repoURL: https://charts.loft.sh
+    targetRevision: "0.24.0"
+    valuesFileUrl:
+#####

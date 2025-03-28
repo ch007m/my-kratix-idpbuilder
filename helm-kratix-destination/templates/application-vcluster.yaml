@@ -1,0 +1,29 @@
+{{- $root := . -}}
+
+{{- /* Loop over the clusters */ -}}
+{{- range $cluster := .Values.clusters }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ $cluster.name }}
+  namespace: argocd
+  labels:
+    organization: {{ $cluster.organization }}
+spec:
+  project: {{ $root.Values.argocd.project }}
+  sources:
+    - chart: vcluster
+      repoURL: {{ $root.Values.vcluster.helm.repoURL }}
+      targetRevision: {{ $root.Values.vcluster.helm.targetRevision }}
+      helm:
+        valueFiles:
+          - {{- $root.Values.vcluster.helm.configUrl }}
+  destination:
+    namespace: {{ $cluster.name }}
+    server: {{ $root.Values.argocd.destination.server }}
+  syncPolicy:
+    automated: {}
+    syncOptions:
+      - CreateNamespace=true
+{{- end }}

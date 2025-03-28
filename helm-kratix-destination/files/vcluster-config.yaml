@@ -1,0 +1,56 @@
+# vcluster configuration based on k8s distro
+#
+# It includes part of the networking section a replicateService able to
+# make the idpbuilder gitea server accessbile from a  vcluster:
+#
+# Host kubernetes service: my-gitea-http.gitea
+# is translated into to
+# vcluster kubernetes service: virt-gitea-http.virt-gitea-namespace
+#
+controlPlane:
+  backingStore:
+    etcd:
+      deploy:
+        enabled: true
+  distro:
+    k8s:
+      enabled: true
+  statefulSet:
+    scheduling:
+      podManagementPolicy: OrderedReady
+networking:
+  replicateServices:
+    fromHost:
+      - from: gitea/my-gitea-http
+        to: virt-gitea-namespace/virt-gitea-http
+
+# Resources to be deployed post vcluster created
+# - Argo CD
+#
+experimental:
+  deploy:
+    vcluster:
+      helm:
+        - chart:
+            name: argo-cd
+            repo: https://argoproj.github.io/argo-helm
+            version: v7.7.3 # appVersion: v2.13.4
+          release:
+            name: argocd
+            namespace: argocd
+          values: |-
+            dex:
+              enabled: false
+            notifications:
+              enabled: false
+            applicationSet:
+              enabled: false
+            ingress:
+              enabled: false
+            crds:
+              install: true
+              keep: true
+
+            configs:
+              params:
+                server.insecure: true
