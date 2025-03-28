@@ -31,9 +31,10 @@ spec:
           - name: worker-1
             path: worker-1
             organization: team-a
-          - name: worker-2
-            path: worker-2
-            organization: team-b
+          #- name: worker-2
+          #  path: worker-2
+          #  organization: team-b
+        # Value to configure the folder containing the helm chart generating the resources needed for a kratix agent: application CR and Secrets
         destinationResourcesVcluster:
           repoURL: cnoe://
           targetRevision: HEAD
