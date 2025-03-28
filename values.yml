@@ -1,7 +1,3 @@
-#mapServices:
-#  fromHost:
-#    - from: gitea/my-gitea-http
-#      to: virt-gitea/virt-gitea-http
 controlPlane:
   backingStore:
     etcd:

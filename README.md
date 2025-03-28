@@ -71,17 +71,25 @@ kind delete cluster --name worker-1
 New test using idpbuilder and vCluster
 
 ```text
-idp create --dev-password --name kratix-vcluster --recreate --color
+idpbuilder create --recreate --color --name kratix --port 8443 --dev-password -p idp/foundation -p idp/kratix
 
+vcluster create worker-2 -n worker-2 -f values.yml
+vcluster disconnect
+
+set -x WORKER2 vcluster_worker-2_worker-2_kind-kratix
+k --context "$WORKER2" create ns argocd
+k --context "$WORKER2" apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+k --context "$WORKER2" apply -f kratix-destination/
+
+# Repeat now with vcluster-1
+vcluster disconnect
 vcluster create worker-1 -n worker-1 -f values.yml
 
-// context is now: vcluster_worker-1_worker-1_kind-kratix-vcluster
-k create ns argocd
-k apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-// Create some applications CR
-k apply -f kratix-destination/
+set -x WORKER1 vcluster_worker-1_worker-1_kind-kratix
+k --context "$WORKER1" create ns argocd
+k --context "$WORKER1" apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
-vcluster delete worker-1
+k --context "$WORKER1" apply -f kratix-destination/
 ```
 
 The status of the Application status is not `sync` as the organization/repository `/kratix/state` don't exist:
