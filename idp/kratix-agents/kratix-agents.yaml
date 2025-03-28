@@ -4,11 +4,11 @@ metadata:
   name: kratix-agents
   namespace: argocd
   labels:
-    app.kubernetes.io/name: kratix-agent
+    app.kubernetes.io/name: kratix-agents
 spec:
   destination:
     server: "https://kubernetes.default.svc"
-  source:
+  sources:
     - repoURL: https://github.com/ch007m/my-kratix-idpbuilder
       targetRevision: HEAD
       path: "helm-kratix-agents"
