@@ -88,7 +88,7 @@ If Argocd is able to watch resources from the kratix IDPlatform gitea server und
 
 Enjoy ;-)
 
-## Add new destinations - vclusters
+## Add new destinations - vclusters (DEPRECATED)
 
 To simulate a more natural environment running in a company, we will now create some additional clusters representing either the `dev`, `test` and `prod` machines or different machines created for: `team-1`, `team-2` having different needs, services that kratix can deal with using `Promises` and `requests`.
 
