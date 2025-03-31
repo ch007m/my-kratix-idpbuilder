@@ -9,7 +9,7 @@ For that purpose, different Argo CD Applications manifests have been created und
 - `foundation`: installing the mandatory components like: cert-manager, ...
 - `kratix`: Deploy the kratix's controller; some default `Destination` and `GitstateStore` resources and register on the gitea server a new git organization: `kratix` and repository: `state`
 
-To create such an IDPlatform, execute the following command with the following ports:
+To create such an IDPlatform, execute the following command which is creating a kind cluster using the following ports:
 
 | Name              | Ingress port | Gitea HTTP port | Gitea SSH port | kind config file name                                              |
 |-------------------|--------------|-----------------|----------------|--------------------------------------------------------------------|
@@ -24,7 +24,9 @@ idpbuilder create --color --dev-password \
   -p idp/kratix
 ```
 
-TODO: Convert the `idp/kratix` resources folder into a helm chart able to configure path of the resources, URL of the gitea server, destination's labels, etc
+**IMPORTANT**: The previous command will only work when the following request will be implemented: https://github.com/cnoe-io/idpbuilder/issues/510. You can in the meantime use this branch and compile the project locally: https://github.com/ch007m/fork-idpbuilder/tree/issue-510
+
+**TODO**: Convert the `idp/kratix` resources folder into a helm chart able to configure path of the resources, URL of the gitea server, destination's labels, etc
 
 When done, you can access the Argo CD: https://argocd.cnoe.localtest.me:8443 or Gitea - https://gitea.cnoe.localtest.me:8443 dashboards using the following credentials:
 ```shell
