@@ -58,7 +58,7 @@ To simulate a more natural environment running in a company, we will now create 
 
 For that purpose we will create some additional clusters using the `idpbuilder` tool. 
 
-But prior to create a new cluster, it is needed first to register on Kratix the new Destination, one for worker cluster.
+But prior to create a new cluster, it is needed first to register on Kratix the new Destination, one for each worker cluster.
 
 To achieve this goal we will install a new idpbuilder package on the cluster using the helm chart `kratix-new-destination` able to:
 - Populate the needed resources
@@ -76,20 +76,20 @@ idpbuilder create --color --dev-password \
   -p idp/kratix-new-destination
 ```
 
-So let's create some worker clusters having the following ports
+So let's create now some worker clusters having the following ports
 
-| Name     | Ingress port | kind config file name                      |
-|----------|--------------|--------------------------------------------|
-| worker 1 | 8444         | [worker-1-8444.cfg](idp/worker-1-8444.cfg) |
-| worker 2 | 8445         | [worker-1-8445.cfg](idp/worker-1-8445.cfg) |
+| Name    | Ingress port | kind config file name                      |
+|---------|--------------|--------------------------------------------|
+| worker1 | 8444         | [worker-1-8444.cfg](idp/worker-1-8444.cfg) |
+| worker2 | 8445         | [worker-1-8445.cfg](idp/worker-1-8445.cfg) |
 
-As the gitea server is running on the Kratix IDPlatform  at the following address: `http://<HOST_IP_ADDRESS>:32223`, we will have to patch the Application CR of the `kratix-agent` before to deploy. Execute then this command before to create the different workers 
+As the gitea server is running on the Kratix IDPlatform at the following address: `http://<HOST_IP_ADDRESS>:32223`, we will have to patch the Application CR of the `kratix-agent` before to deploy. Execute then this command before to create the different workers 
 
 ```shell
 yq e '.spec.source.helm.valuesObject.giteaServer.url = "http://<HOST_IP_ADDRESS>:32223"' -i idp/kratix-agent/kratix-agent.yaml
 ```
 
-When done, execute the following command respectively for the `worker-1` and `worker-2`
+When done, execute the following command respectively for the `worker1` and `worker2`
 ```shell
 idpbuilder create --color --dev-password --recreate \
   --name <WORKER_NAME> \
@@ -101,13 +101,10 @@ idpbuilder create --color --dev-password --recreate \
 When the cluster has been created and Applications deployed, verify their status to check if the Application CR is sync and healthy
 
 ```shell
-export CONTEXT="kind-worker-1" # set CONTEXT "kind-worker-1"
+export CONTEXT="kind-worker1" # set CONTEXT "kind-worker-1"
 kubectl --context "$CONTEXT" -n argocd get application -lcluster=worker-1
 ```
-If Argocd is able to watch resources from the kratix IDPlatform gitea server under `kratix/state/<WORKKER_NAME/resources | dependencies`, then you can start to play with Kratix and deploy some promises and requests against the different environments
-
-TODO:
-- Find a way to provision the kratix IDPlatform with new Destination CR (one for each worker) worker where path refers to its directory under the git repository: `kratix/state/<WORKER_NAME>` and having environment's labels as: `dev`, `test`, `prod` or `team-a`, `team-b` etc
+If Argocd is able to watch resources from the kratix IDPlatform gitea server under `kratix/state/<WORKKER_NAME/resources | dependencies`, then you can start to play with Kratix and deploy some promises and requests against the different environments !
 
 Enjoy ;-)
 
