@@ -9,10 +9,17 @@ For that purpose, different Argo CD Applications manifests have been created und
 - `foundation`: installing the mandatory components like: cert-manager, ...
 - `kratix`: Deploy the kratix's controller; some default `Destination` and `GitstateStore` resources and register on the gitea server a new git organization: `kratix` and repository: `state`
 
-To create such an IDPlatform, execute the following command:
+To create such an IDPlatform, execute the following command with the following ports:
+
+| Name              | Ingress port | Gitea HTTP port | Gitea SSH port | kind config file name                                              |
+|-------------------|--------------|-----------------|----------------|--------------------------------------------------------------------|
+| Kratix IDPlatform | 8443         | 32223           | 32222          | [kratix-idp-8443.cfg](idp/kratix-idp-8443.cfg) |
+
 ```shell
-idpbuilder create --recreate --color --dev-password \
+idpbuilder create --color --dev-password \
   --name kratix \
+  --port 8443 \
+  --kind-config idp/kratix-idp-8443.cfg \
   -p idp/foundation \
   -p idp/kratix
 ```
@@ -51,10 +58,10 @@ For that purpose we will create some additional clusters using the `idpbuilder` 
 
 So let's create some worker clusters having the following ports
 
-| Name     | Ingress port | Gitea SSH port | kind config file name |
-|----------|--------------|----------------|-----------------------|
-| worker 1 | 8444         | 32224          | worker-1-32224.cfg    |
-| worker 2 | 8445         | 32225          | worker-1-32225.cfg    |
+| Name     | Ingress port | kind config file name                      |
+|----------|--------------|--------------------------------------------|
+| worker 1 | 8444         | [worker-1-8444.cfg](idp/worker-1-8444.cfg) |
+| worker 2 | 8445         | [worker-1-8445.cfg](idp/worker-1-8445.cfg) |
 
 As the gitea server is running on the Kratix IDPlatform  at the following address: `http://<HOST_IP_ADDRESS>:32223`, we will have to patch the Application CR of the `kratix-agent` before to deploy. Execute then this command before to create the different workers 
 
@@ -71,7 +78,15 @@ idpbuilder create --color --dev-password --recreate \
   -p idp/kratix-agent
 ```
 
-TODO
+When the cluster has been created and Applications deployed, verify their status to check if the Application CR is sync and healthy
+
+```shell
+export CONTEXT="kind-worker-1" # set CONTEXT "kind-worker-1"
+kubectl --context "$CONTEXT" -n argocd get application -lcluster=worker-1
+```
+If Argocd is able to watch resources from the kratix IDPlatform gitea server under `kratix/state/<WORKKER_NAME/resources | dependencies`, then you can start ti play with Kratix and deploy some promises and requests against the different environments
+
+Enjoy ;-)
 
 ## Add new destinations - vclusters
 
@@ -88,17 +103,6 @@ idpbuilder create --color --dev-password \
         -p idp/kratix \
         -p idp/vcluster
 ```
-
-When the cluster has been created and Applications deployed, verify their status to check if the Application CR is sync and healthy
-
-```shell
-export CONTEXT="kind-worker-1" # set CONTEXT "kind-worker-1"
-kubectl --context "$CONTEXT" -n argocd get application -lcluster=worker-1
-```
-If Argocd is able to watch resources from the gitea server under `kratix/state/<WORKKER_NAME/resources | dependencies`, then you can start ti play with Kratic and deploy some promises and requests against the different environments
-
-Enjoy ;-)
-
 
 
 **Note**: To access the cluster, it is needed to execute the command: `vcluster connect worker-2` responsible to create a kubectl's container acting as proxy able to access from your laptop the vcluster.
