@@ -103,6 +103,9 @@ When the cluster has been created and Applications deployed, verify their status
 ```shell
 export CONTEXT="kind-worker1" # set CONTEXT "kind-worker-1"
 kubectl --context "$CONTEXT" -n argocd get application -lcluster=worker-1
+NAME                                    SYNC STATUS   HEALTH STATUS
+kratix-workload-worker-1-dependencies   Synced        Healthy
+kratix-workload-worker-1-resources      Synced        Healthy
 ```
 If Argocd is able to watch resources from the kratix IDPlatform gitea server under `kratix/state/<WORKKER_NAME/resources | dependencies`, then you can start to play with Kratix and deploy some promises and requests against the different environments !
 
