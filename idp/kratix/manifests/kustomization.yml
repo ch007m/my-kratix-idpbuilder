@@ -4,4 +4,5 @@ kind: Kustomization
 resources:
   - https://github.com/syntasso/kratix/releases/latest/download/kratix.yaml
   - gitstatestore.yml
-  - applications.yml
+  - destination.yml
+  - application-workload.yml

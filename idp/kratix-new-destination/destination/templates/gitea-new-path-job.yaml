@@ -1,0 +1,80 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: gitea-new-path-{{.Values.destination.name}}
+  namespace: kratix-platform-system
+spec:
+  template:
+    metadata:
+      generateName: gitea-new-path-{{.Values.destination.name}}
+    spec:
+      serviceAccountName: kratix-job
+      restartPolicy: Never
+      containers:
+        - name: provision-new-path-gitea
+          image: registry.access.redhat.com/ubi9
+          command: ["/bin/bash", "-c"]
+          args:
+            - |
+              #! /bin/bash
+              echo "### Set env variables to access gitea"
+              export GITEA_API_URL="https://gitea.cnoe.localtest.me:8443/api"
+              export GITEA_USERNAME="giteaAdmin"
+              export GITEA_PASSWORD="developer"
+              
+              set +e
+              export ORG_NAME="kratix"
+              export REPO_NAME="state"
+              export REPO_DESCRIPTION="Kratix state repository"
+
+              CONTENT=$(echo -n "This is a dummy file" | base64)
+
+              echo "### Creating the folder to store the state for: {{.Values.destination.name}}/dependencies"
+              RESULT=$(curl -kv -X "$GITEA_API_URL/v1/repos/$ORG_NAME/$REPO_NAME/contents/{{.Values.destination.path}}/dependencies/dummy.txt" \
+                 -H 'accept: application/json' -H 'Content-Type: application/json' \
+                 -u "$GITEA_USERNAME:$GITEA_PASSWORD" \
+                 -d '{
+                 "author": {
+                  "email": "admin@kratix.io",
+                  "name": "admin"
+                 },
+                 "branch": "main",
+                 "committer": {
+                  "email": "admin@kratix.io",
+                  "name": "admin"
+                 },
+                 "content": "VGhpcyBpcyBhIGR1bW15IGZpbGU=",
+                 "message": "creating folder {{.Values.destination.path}}/dependencies",
+                 "signoff": true
+                 }' 2>&1)
+              if [ $? -ne 0 ]; then
+                echo "curl command failed with the following error:"
+                echo "$RESULT"
+                exit 1
+              fi
+
+              echo "### Creating the folder to store the state for: {{.Values.destination.name}}/resources"
+              RESULT=$(curl -kv -X "$GITEA_API_URL/v1/repos/$ORG_NAME/$REPO_NAME/contents/{{.Values.destination.path}}/resources/dummy.txt" \
+                 -H 'accept: application/json' -H 'Content-Type: application/json' \
+                 -u "$GITEA_USERNAME:$GITEA_PASSWORD" \
+                 -d '{
+                 "author": {
+                  "email": "admin@kratix.io",
+                  "name": "admin"
+                 },
+                 "branch": "main",
+                 "committer": {
+                  "email": "admin@kratix.io",
+                  "name": "admin"
+                 },
+                 "content": "VGhpcyBpcyBhIGR1bW15IGZpbGU=",
+                 "message": "creating folder {{.Values.destination.path}}/resources",
+                 "signoff": true
+                 }' 2>&1)
+              if [ $? -ne 0 ]; then
+                echo "curl command failed with the following error:"
+                echo "$RESULT"
+                exit 1
+              fi
+              
+              set -e

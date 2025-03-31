@@ -24,6 +24,8 @@ idpbuilder create --color --dev-password \
   -p idp/kratix
 ```
 
+TODO: Convert the `idp/kratix` resources folder into a helm chart able to configure path of the resources, URL of the gitea server, destination's labels, etc
+
 When done, you can access the Argo CD: https://argocd.cnoe.localtest.me:8443 or Gitea - https://gitea.cnoe.localtest.me:8443 dashboards using the following credentials:
 ```shell
 ❯ idp get secrets

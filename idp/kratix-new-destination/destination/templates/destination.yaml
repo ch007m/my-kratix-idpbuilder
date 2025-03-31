@@ -1,0 +1,13 @@
+apiVersion: platform.kratix.io/v1alpha1
+kind: Destination
+metadata:
+  name: {{ .Values.destination.name }}
+  labels:
+    environment: {{ .Values.labels.environment }}
+    cluster:  {{ .Values.labels.cluster }}
+    team: {{ .Values.labels.team }}
+spec:
+  path: {{ .Values.destination.path }}
+  stateStoreRef:
+    name: {{ .Values.stateStore.reference }}
+    kind: {{ .Values.stateStore.kind }}

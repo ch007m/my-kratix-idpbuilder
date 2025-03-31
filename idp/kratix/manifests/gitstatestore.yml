@@ -9,15 +9,3 @@ spec:
     namespace: gitea
   url: https://gitea.cnoe.localtest.me:8443/kratix/state
   branch: main
----
-apiVersion: platform.kratix.io/v1alpha1
-kind: Destination
-metadata:
-  name: platform
-  labels:
-    environment: dev
-spec:
-  path: platform
-  stateStoreRef:
-    name: gitea
-    kind: GitStateStore

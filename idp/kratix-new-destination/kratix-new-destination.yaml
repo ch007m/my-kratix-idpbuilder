@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kratix-new-destination
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: kratix-new-destination
+spec:
+  project: default
+  destination:
+    server: "https://kubernetes.default.svc"
+  source:
+    repoURL: cnoe://kratix-new-destination
+    targetRevision: HEAD
+    path: .
+    helm:
+      valuesObject:
+        gitKratix:
+          org: kratix
+          repository: state
+  syncPolicy:
+    automated:
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
