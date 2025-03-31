@@ -84,7 +84,10 @@ When the cluster has been created and Applications deployed, verify their status
 export CONTEXT="kind-worker-1" # set CONTEXT "kind-worker-1"
 kubectl --context "$CONTEXT" -n argocd get application -lcluster=worker-1
 ```
-If Argocd is able to watch resources from the kratix IDPlatform gitea server under `kratix/state/<WORKKER_NAME/resources | dependencies`, then you can start ti play with Kratix and deploy some promises and requests against the different environments
+If Argocd is able to watch resources from the kratix IDPlatform gitea server under `kratix/state/<WORKKER_NAME/resources | dependencies`, then you can start to play with Kratix and deploy some promises and requests against the different environments
+
+TODO:
+- Find a way to provision the kratix IDPlatform with new Destination CR (one for each worker) worker where path refers to its directory under the git repository: `kratix/state/<WORKER_NAME>` and having environment's labels as: `dev`, `test`, `prod` or `team-a`, `team-b` etc
 
 Enjoy ;-)
 
