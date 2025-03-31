@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kratix-agent
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: kratix-agent
+spec:
+  project: default
+  destination:
+    server: "https://kubernetes.default.svc"
+  source:
+    repoURL: cnoe://destination
+    targetRevision: HEAD
+    path: .
+    helm:
+      valuesObject:
+        giteaServer:
+          url: http://192.168.129.0:32223
+        gitKratix:
+          org: kratix
+          repository: state
+  syncPolicy:
+    automated:
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,5 +1,5 @@
 apiVersion: v2
-name: helm-kratix-agents
+name: helm-kratix-agent
 description: A Helm chart for Kubernetes
 
 type: application

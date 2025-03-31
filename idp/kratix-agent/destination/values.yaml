@@ -8,6 +8,7 @@ giteaServer:
   url: http://virt-gitea-http.virt-gitea-namespace:3000
   username: "giteaAdmin"
   password: "developer"
+
 gitKratix:
   org: kratix
   repository: state

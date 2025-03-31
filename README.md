@@ -13,7 +13,6 @@ To create such an IDPlatform, execute the following command:
 ```shell
 idpbuilder create --recreate --color --dev-password \
   --name kratix \
-  --port 8443 \
   -p idp/foundation \
   -p idp/kratix
 ```
@@ -44,7 +43,37 @@ PGUSER=$(kubectl get secret postgres.acid-example-postgresql.credentials.postgre
 psql bestdb"
 ```
 
-## Add new destinations
+## Add new destinations - idpbuilder
+
+To simulate a more natural environment running in a company, we will now create some additional clusters representing either the `dev`, `test` and `prod` machines or different machines created for: `team-1`, `team-2` having different needs, services that kratix can deal with using `Promises` and `requests`.
+
+For that purpose we will create some additional clusters using the `idpbuilder` tool.
+
+So let's create some worker clusters having the following ports
+
+| Name     | Ingress port | Gitea SSH port | kind config file name |
+|----------|--------------|----------------|-----------------------|
+| worker 1 | 8444         | 32224          | worker-1-32224.cfg    |
+| worker 2 | 8445         | 32225          | worker-1-32225.cfg    |
+
+As the gitea server is running on the Kratix IDPlatform  at the following address: `http://<HOST_IP_ADDRESS>:32223`, we will have to patch the Application CR of the `kratix-agent` before to deploy. Execute then this command before to create the different workers 
+
+```shell
+yq e '.spec.source.helm.valuesObject.giteaServer.url = "http://<HOST_IP_ADDRESS>:32223"' -i idp/kratix-agent/kratix-agent.yaml
+```
+
+When done, execute the following command respectively for the `worker-1` and `worker-2`
+```shell
+idpbuilder create --color --dev-password --recreate \
+  --name <WORKER_NAME> \
+  --port <INGRESS_PORT> \
+  --kind-config idp/<KIND_CONFIG_FILE_NAME> \
+  -p idp/kratix-agent
+```
+
+TODO
+
+## Add new destinations - vclusters
 
 To simulate a more natural environment running in a company, we will now create some additional clusters representing either the `dev`, `test` and `prod` machines or different machines created for: `team-1`, `team-2` having different needs, services that kratix can deal with using `Promises` and `requests`.
 
@@ -57,8 +86,20 @@ idpbuilder create --color --dev-password \
         --port 8443 \
         -p idp/foundation \
         -p idp/kratix \
-        -p idp/kratix-agents
+        -p idp/vcluster
 ```
+
+When the cluster has been created and Applications deployed, verify their status to check if the Application CR is sync and healthy
+
+```shell
+export CONTEXT="kind-worker-1" # set CONTEXT "kind-worker-1"
+kubectl --context "$CONTEXT" -n argocd get application -lcluster=worker-1
+```
+If Argocd is able to watch resources from the gitea server under `kratix/state/<WORKKER_NAME/resources | dependencies`, then you can start ti play with Kratic and deploy some promises and requests against the different environments
+
+Enjoy ;-)
+
+
 
 **Note**: To access the cluster, it is needed to execute the command: `vcluster connect worker-2` responsible to create a kubectl's container acting as proxy able to access from your laptop the vcluster.
 
@@ -86,4 +127,6 @@ TODO:
   - Create and execute a new job able to add on the existing gitea server (under the org/repository: `kratix/state`) the folder of the new destination (aka vcluster)
   - Create for the IDPlatform running Kratix new resources: Destination & GitStateStore to register a new destination (aka vcluster)
 
-Enjoy ;-)
+```shell
+k get secret/vc-config-worker-2 -n worker-2 -ojson | jq -r '.data.config' | base64 -d
+```

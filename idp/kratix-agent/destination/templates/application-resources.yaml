@@ -2,21 +2,21 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: kratix-workload-{{ $.Values.clusterName }}-dependencies
+  name: kratix-workload-{{ $.Values.clusterName }}-resources
   namespace: argocd
   labels:
-    vcluster: {{ $.Values.clusterName }}
+    cluster: {{ $.Values.clusterName }}
 spec:
   project: default
   source:
     repoURL: "{{ $.Values.giteaServer.url }}/{{ $.Values.gitKratix.org }}/{{ $.Values.gitKratix.repository }}"
     targetRevision: HEAD
-    path: ./{{ $.Values.clusterName }}/dependencies
+    path: ./{{ $.Values.clusterName }}/resources
     directory:
       recurse: true
   destination:
-      server: https://kubernetes.default.svc # in-cluster reconcile
-      namespace: default # The namespace will only be set for namespace-scoped resources without a value for .metadata.namespace
+    server: https://kubernetes.default.svc # in-cluster reconcile
+    namespace: default # The namespace will only be set for namespace-scoped resources without a value for .metadata.namespace
   syncPolicy:
     automated:
       selfHeal: true
