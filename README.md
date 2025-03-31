@@ -56,11 +56,15 @@ psql bestdb"
 
 To simulate a more natural environment running in a company, we will now create some additional clusters representing either the `dev`, `test` and `prod` machines or different machines created for: `team-1`, `team-2` having different needs, services that kratix can deal with using `Promises` and `requests`.
 
-For that purpose we will create some additional clusters using the `idpbuilder` tool. Prior to create a new cluster, it is needed first to register on the Gitea server
-running on the IDPlatform the folders where the dependencies and resources generated from the Promises's requests will be store like a Destination CR to let Kratix to 
-apply the resources to the target worker cluster where an Argo CD agent is running.
+For that purpose we will create some additional clusters using the `idpbuilder` tool. 
 
-To achieve this goal we will install a new package on the cluster using the helm chart `kratix-new-destination` able to populate the needed resources and to execute a gitea curl job to create the folders `dependencies` and `resources` for a worker
+But prior to create a new cluster, it is needed first to register on Kratix the new Destination, one for worker cluster.
+
+To achieve this goal we will install a new idpbuilder package on the cluster using the helm chart `kratix-new-destination` able to:
+- Populate the needed resources
+- Execute a gitea curl job to create the folders `dependencies` and `resources` for a worker
+
+**Note**: The package `kratix-new-destination` uses an [ApplicationSet](idp/kratix-new-destination/kratix-new-destination.yaml) resource able to create an Argo CD Application for each needed worker cluster. Feel free to review the ApplicationSet file to add more workers, change the labels, etc
 
 ```shell
 idpbuilder create --color --dev-password \
@@ -69,7 +73,7 @@ idpbuilder create --color --dev-password \
   --kind-config idp/kratix-idp-8443.cfg \
   -p idp/foundation \
   -p idp/kratix \
-  -p idp/kratix-new-destination/kratix-new-destination-1.yaml
+  -p idp/kratix-new-destination
 ```
 
 So let's create some worker clusters having the following ports
