@@ -15,9 +15,18 @@ spec:
     path: .
     helm:
       valuesObject:
-        gitKratix:
-          org: kratix
-          repository: state
+        destination:
+          name: worker-1
+          path: worker-1
+
+        stateStore:
+          kind: GitStateStore
+          reference: gitea
+
+        labels:
+          environment: dev
+          cluster: worker-1
+          team: team-a
   syncPolicy:
     automated:
       selfHeal: true
