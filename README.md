@@ -129,7 +129,6 @@ idpbuilder create --color --dev-password \
         -p idp/vcluster
 ```
 
-
 **Note**: To access the cluster, it is needed to execute the command: `vcluster connect worker-2` responsible to create a kubectl's container acting as proxy able to access from your laptop the vcluster.
 
 You can create more vclusters if you change the helm values of the Application CR of [kratix-agents.yaml](idp/kratix-agents/kratix-agents.yaml)

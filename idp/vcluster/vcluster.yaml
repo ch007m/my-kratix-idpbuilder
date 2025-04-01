@@ -1,10 +1,10 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: kratix-agent
+  name: vcluster
   namespace: argocd
   labels:
-    app.kubernetes.io/name: kratix-agent
+    app.kubernetes.io/name: vcluster
 spec:
   project: default
   destination:
@@ -12,7 +12,7 @@ spec:
   source:
     repoURL: cnoe://
     targetRevision: HEAD
-    path: vclusters
+    path: vcluster
     helm:
       valuesObject:
         argocd:
