@@ -1,63 +1,46 @@
 apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
+kind: Application
 metadata:
   name: vcluster
   namespace: argocd
+  labels:
+    app.kubernetes.io/name: vcluster
 spec:
-  generators:
-    - list:
-        elements:
-          - clusterName: worker-1
-            namespace: worker-1
-            environment: dev
-            team: team-a
-          - clusterName: worker-2
-            namespace: worker-2
-            environment: test
-            team: team-b
-          #- clusterName: worker-3
-          #  namespace: worker-3
-          #  environment: prod
-          #  team: team-c
-  template:
-    metadata:
-      name: "vc-{{clusterName}}"
-      labels:
-        applicationName: "vc-{{clusterName}}"
-      finalizers:
-        - resources-finalizer.argocd.argoproj.io # enabling cascading deletion
-  spec:
-    project: default
-    destination:
-      server: "https://kubernetes.default.svc"
-      namespace: "{{namespace}}"
-    source:
-      repoURL: https://charts.loft.sh
-      targetRevision: "0.24.0"
+  project: default
+  destination:
+    server: "https://kubernetes.default.svc"
+  source:
+    repoURL: cnoe://
+    targetRevision: HEAD
+    path: vcluster
+    helm:
       valuesObject:
-        controlPlane:
-          distro:
-            k8s:
-              enabled: true
-          backingStore:
-            etcd:
-              deploy:
-                enabled: true
-          statefulSet:
-            scheduling:
-              podManagementPolicy: OrderedReady
-          # Add an ingress host to access the vcluster Kubernetes API
-          ingress:
-            enabled: true
-            host: "{{clusterName}}.cnoe.localtest.me"
-            spec:
-              ingressClassName: nginx
-        # To customize the content of the vc-<vcluster> secret
-        exportKubeConfig:
-          server: "https://{{clusterName}}.cnoe.localtest.me:8443"
-          context: "vc_{{clusterName}}"
-    syncPolicy:
-      automated:
-        selfHeal: true
-      syncOptions:
-        - CreateNamespace=true
+        argocd:
+          namespace: argocd
+          project: default
+          destination:
+            server: https://kubernetes.default.svc
+            namespace:
+        vcluster:
+          helm:
+            repoURL: https://charts.loft.sh
+            targetRevision: "0.24.0"
+            valuesFileUrl: https://raw.githubusercontent.com/ch007m/my-kratix-idpbuilder/refs/heads/main/idp/kratix-agent/vclusters/files/vcluster-config.yaml
+        # vclusters and destinations to be created
+        clusters:
+          - name: worker-1
+            path: worker-1
+            organization: team-a
+          #- name: worker-2
+          #  path: worker-2
+          #  organization: team-b
+        # Value to configure the folder containing the helm chart generating the resources needed for a kratix agent: application CR and Secrets
+        destinationResourcesVcluster:
+          repoURL: cnoe://
+          targetRevision: HEAD
+          path: destination-vcluster
+  syncPolicy:
+    automated:
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
