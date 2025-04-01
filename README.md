@@ -154,7 +154,3 @@ TODO:
   - Install on the vcluster the generated resources: Argo Applications and Secret to access the gitea server
   - Create and execute a new job able to add on the existing gitea server (under the org/repository: `kratix/state`) the folder of the new destination (aka vcluster)
   - Create for the IDPlatform running Kratix new resources: Destination & GitStateStore to register a new destination (aka vcluster)
-
-```shell
-k get secret/vc-config-worker-2 -n worker-2 -ojson | jq -r '.data.config' | base64 -d
-```
