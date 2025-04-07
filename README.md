@@ -24,7 +24,7 @@ idpbuilder create --color --dev-password \
   -p idp/kratix
 ```
 
-**IMPORTANT**: The previous command will only work when the following request will be implemented: https://github.com/cnoe-io/idpbuilder/issues/510. You can in the meantime use this branch and compile the project locally: https://github.com/ch007m/fork-idpbuilder/tree/issue-510
+**IMPORTANT**: The previous command will only work if you use a version of idpbuilder >= [0.10](https://github.com/cnoe-io/idpbuilder/releases/tag/v0.10.0-nightly.20250407))
 
 **TODO**: Convert the `idp/kratix` resources folder into a helm chart able to configure path of the resources, URL of the gitea server, destination's labels, etc
 
