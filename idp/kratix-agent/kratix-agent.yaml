@@ -10,7 +10,7 @@ spec:
   destination:
     server: "https://kubernetes.default.svc"
   source:
-    repoURL: cnoe://destination
+    repoURL: cnoe://kratix-worload
     targetRevision: HEAD
     path: .
     helm:
