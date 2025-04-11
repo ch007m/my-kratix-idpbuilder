@@ -64,7 +64,7 @@ But prior to create a new cluster, it is needed first to register on Kratix the 
 
 To achieve this goal we will install a new idpbuilder package on the cluster using the helm chart `kratix-new-destination` able to:
 - Populate the needed resources
-- Execute a gitea curl job to create the folders `dependencies` and `resources` for a worker
+- Execute a kubernetes job executing some `gitea curl commands` to create the folders `dependencies` and `resources` for a worker on the GitStateStore
 
 **Note**: The package `kratix-new-destination` uses an [ApplicationSet](idp/kratix-new-destination/kratix-new-destination.yaml) resource able to create an Argo CD Application for each needed worker cluster. Feel free to review the ApplicationSet file to add more workers, change the labels, etc
 

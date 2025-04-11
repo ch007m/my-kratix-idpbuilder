@@ -8,6 +8,7 @@ metadata:
 spec:
   destination:
     server: "https://kubernetes.default.svc"
+    namespace: kratix-platform-system
   source:
     repoURL: cnoe://manifests
     targetRevision: HEAD
