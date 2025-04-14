@@ -9,7 +9,7 @@ For that purpose, different Argo CD Applications manifests have been created und
 - `foundation`: installing the mandatory components like: cert-manager, ...
 - `kratix`: Deploy the kratix's controller; some default `Destination` and `GitstateStore` resources and register on the gitea server a new git organization: `kratix` and repository: `state`
 
-To create such an IDPlatform, execute the following command which is creating a kind cluster using the following ports:
+To create such an IDPlatform, execute the following command creating a kind cluster using the following ports:
 
 | Name              | Ingress port | Gitea HTTP port | Gitea SSH port | kind config file name                                              |
 |-------------------|--------------|-----------------|----------------|--------------------------------------------------------------------|
@@ -109,11 +109,11 @@ NAME                                    SYNC STATUS   HEALTH STATUS
 kratix-workload-worker-1-dependencies   Synced        Healthy
 kratix-workload-worker-1-resources      Synced        Healthy
 ```
-If Argocd is able to watch resources from the kratix IDPlatform gitea server under `kratix/state/<WORKKER_NAME/resources | dependencies`, then you can start to play with Kratix and deploy some promises and requests against the different environments !
+If Argocd is able to watch resources from the kratix IDPlatform gitea server under `kratix/state/<WORKKER_NAME/resources | dependencies`, then you can start [to play with Kratix](#how-to-play-wit-kratix) and deploy some promises and requests against the different environments !
 
 Enjoy ;-)
 
-## How to play wit Kratix
+# How to play wit Kratix
 
 In order to test the IDPlatform which has been installed, you will have to either create a new `Promise` (see hereafter) and a `Request` or use an existing promise published on one of the marketplaces:
 - https://github.com/syntasso/kratix-marketplace (mongodb, redis, kafka, dapr, vault, etc)
@@ -170,7 +170,7 @@ apiVersion: snowdrop.dev/v1alpha1
 kind: database
 metadata:
   name: fruits-db
-  namespace: kratix-requests # This namespace MUST exist within the target cluster !!
+  namespace: kratix-requests # This namespace MUST exist within the target cluster !
 spec:
   environment: dev
   auth:
@@ -225,44 +225,124 @@ fruits_database=>
 vcluster disconnect
 ```
 
-## Add new destinations - vclusters (DEPRECATED)
+## Using vclusters as alternative
 
-To simulate a more natural environment running in a company, we will now create some additional clusters representing either the `dev`, `test` and `prod` machines or different machines created for: `team-1`, `team-2` having different needs, services that kratix can deal with using `Promises` and `requests`.
+Instead of using several kind clusters running as IDPlatform, you can also follow these instructions where we add as new 
+Kratix `agent`, a [vcluster](https://www.vcluster.com/docs) on an existing IDPlatform.
 
-For that purpose we will create top of the IDPlatform cluster some additional clusters using vcluster - https://www.vcluster.com/docs
+### Instructions
 
-So let's create some vclusters: `worker-1` and `worker-2`
+Git clone the project: https://github.com/ch007m/my-idp-packages
 ```shell
-idpbuilder create --color --dev-password \
-        --name kratix \
-        --port 8443 \
-        -p idp/foundation \
-        -p idp/kratix \
-        -p idp/vcluster
+git clone https://github.com/ch007m/my-idp-packages; cd my-idp-packages
 ```
 
-**Note**: To access the cluster, it is needed to execute the command: `vcluster connect worker-2` responsible to create a kubectl's container acting as proxy able to access from your laptop the vcluster.
+Create an IDPlatform cluster, deploy kyverno and create 2 vclusters: worker-1 and worker-2
+```shell
+idpbuilder create \
+  --kind-config kind-32223.cfg \
+  --color \
+  --dev-password \
+  --name idplatform \
+  --port 8443 \
+  -p vcluster \
+  -p kyverno --recreate
+```
+**Note: Kyverno is used as policy engine to create secrets. We could use as alternative: [External-Secrets](https://external-secrets.io/).
 
-You can create more vclusters if you change the helm values of the Application CR of [kratix-agents.yaml](idp/kratix-agents/kratix-agents.yaml)
+Deploy a Kyverno policy able to Create the `TLSconfig secret` used by Argo Secret to access the Kubernetes API of the different vclusters.
+```shell
+  idpbuilder create \
+  --color \
+  --dev-password \
+  --name idplatform \
+  --port 8443 \
+  -p vcluster \
+  -p kyverno \
+  -p kyverno-policy-secret
+```
+
+Install now the kratix pre-requisites (cert manager, etc) and kratix
+```shell
+  idpbuilder create \
+  --color \
+  --dev-password \
+  --name idplatform \
+  --port 8443 \
+  -p vcluster \
+  -p kyverno \
+  -p kyverno-policy-secret \
+  -p cert-manager \
+  -p kratix
+```
+
+Execute the job creating the Gitea Org `kratix` and StateStore repository `state`
+```shell
+  idpbuilder create \
+  --color \
+  --dev-password \
+  --name idplatform \
+  --port 8443 \
+  -p vcluster \
+  -p kyverno \
+  -p kyverno-policy-secret \
+  -p cert-manager \
+  -p kratix \
+  -p kratix-gitstore-job
+```
+
+Register 2 new destination(s) for `worker-1` and `worker-2` on the main cluster running kratix
+```shell
+  idpbuilder create \
+  --color \
+  --dev-password \
+  --name idplatform \
+  --port 8443 \
+  -p vcluster \
+  -p kyverno \
+  -p kyverno-policy-secret \
+  -p cert-manager \
+  -p kratix \
+  -p kratix-gitstore-job \
+  -p kratix-new-destination
+```  
+
+Install Argocd on each vcluster. TODO: Find a way to install argocd agent, remove non needed servers: dex, etc
+```shell
+vcluster connect worker-1
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+vcluster disconnect
+
+vcluster connect worker-2
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+vcluster disconnect
+```
+
+Edit the ApplicationSet file: `kratix-new-agent.yaml` of the package `kratix-new-agent` to set the IP address of your local machine
+where the gitea server runs.
+
 ```yaml
-        clusters:
-          - name: worker-1
-            path: worker-1
-            organization: team-a
-          - name: worker-2
-            path: worker-2
-            organization: team-b
-          - name: worker-3
-            path: worker-3
-            organization: team-c
+  giteaServer:
+    url: http://192.168.129.0:32223 # instead of https://gitea.cnoe.localtest.me:8443
 ```
 
-To uninstall a vcluster: `helm uninstall worker-2 -n worker-2`
+Register the new agents for `worker-1` and `worker-2`. 
+```shell
+  idpbuilder create \
+  --color \
+  --dev-password \
+  --name idplatform \
+  --port 8443 \
+  -p vcluster \
+  -p kyverno \
+  -p kyverno-policy-secret \
+  -p cert-manager \
+  -p kratix \
+  -p kratix-gitstore-job \
+  -p kratix-new-destination \
+  -p kratix-new-agent
+```  
 
-TODO:
-- Use argocd to install the resources of the kratix's agent instead of deploying them manually with the command `k --context "$WORKER1" apply -f kratix-destination/worker-1-resources.yml`
-- Generate using a template engine (aka helm) the resources to be created to:
-  - Create a vcluster, deploy argocd
-  - Install on the vcluster the generated resources: Argo Applications and Secret to access the gitea server
-  - Create and execute a new job able to add on the existing gitea server (under the org/repository: `kratix/state`) the folder of the new destination (aka vcluster)
-  - Create for the IDPlatform running Kratix new resources: Destination & GitStateStore to register a new destination (aka vcluster)
+Continue with the [How to play](#how-to-play-wit-kratix) now ;-)
