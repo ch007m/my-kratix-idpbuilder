@@ -16,9 +16,10 @@ Such a process is simplified as the tool `idpbuilder` allows a user to create lo
 
 For that purpose, different `packages` containing Argo CD Application(Set) files, manifests, helm chart, etc. have been created within a Git repository in order to provision the IDPlatform.
 
-To use the scenario 1 or 2, it is then needed first to git clone the following project or to fork it:
+To use the scenario 1 or 2, it is then needed first to git clone the following project or to fork it and to export the path:
 ```shell
-git clone https://github.com/ch007m/my-idp-packages; cd my-idp-packages
+git clone https://github.com/ch007m/my-idp-packages
+export PACKAGES_REPO=$(pwd)/my-idp-packages # set -x PACKAGES_REPO $(pwd)/my-idp-packages
 ```
 **Note**: If you fork it, then you can create a new branch to push your local changes when you will modify the Argo Application(Set) files of the packages to customize the Helm values, etc 
 
@@ -36,9 +37,9 @@ idpbuilder create --color --dev-password \
   --name kratix \
   --port 8443 \
   --kind-config idp/kratix-idp-8443.cfg \
-  -p cert-manager \
-  -p kratix \
-  -p kratix-gitstore-job
+  -p $PACKAGES_REPO/cert-manager \
+  -p $PACKAGES_REPO/kratix \
+  -p $PACKAGES_REPO/kratix-gitstore-job
 ```
 **IMPORTANT**: The previous command will only work if you use a version of idpbuilder >= [0.10](https://github.com/cnoe-io/idpbuilder/releases/tag/v0.10.0-nightly.20250407)
 
@@ -81,22 +82,41 @@ spec:
 ...
 ```
 
-When the file has been reviewed and is ready, you can install the package using the command:
+When the file has been reviewed, you can install the package using the command:
 
 ```shell
 idpbuilder create --color --dev-password \
   --name kratix \
   --port 8443 \
   --kind-config idp/kratix-idp-8443.cfg \
-  -p cert-manager \
-  -p kratix \
-  -p idp/kratix-new-destination
+  -p $PACKAGES_REPO/cert-manager \
+  -p $PACKAGES_REPO/kratix \
+  -p $PACKAGES_REPO/kratix-gitstore-job \
+  -p $PACKAGES_REPO/kratix-new-destination
 ```
 
-As the package `kratix-new-agent` that we will use to provision a cluster has been designed as an Argo CD ApplicationSet file, it is needed to perform some changes in order to set up properly the `worker` clusters for this scenario.
+**Note**: You can verify if a new `destination` folder has been created under the Kratix StateStore repository. Example: `https://gitea.cnoe.localtest.me:8443/kratix/state/src/branch/main/worker-1`
 
-Edit the file to perform the following modifications: 
+When done, we will create two new clusters having the following name and ports
+
+| Name    | Ingress port | kind config file name                      |
+|---------|--------------|--------------------------------------------|
+| worker-1 | 8444         | [worker-1-8444.cfg](idp/worker-1-8444.cfg) |
+| worker-2 | 8445         | [worker-1-8445.cfg](idp/worker-1-8445.cfg) |
+
+and we will provision each using the package `kratix-new-agent`. 
+
+This package generates the following resources:
+
+- Argo CD Application CR able to watch the `dependencies` under the Gitea server repository path: `ORG/REPO/<WORKER_NAME>/dependencies`
+- Argo CD Application CR able to watch the `resources` under the Gitea server repository path: `ORG/REPO/<WORKER_NAME>/respurces`
+- A Secret to allow Argo CD to access the Gitea Server and to be authenticated
+
+As this `package` has been designed as an Argo CD ApplicationSet file, it is needed to perform some changes in order to set up properly the `worker` cluster for this scenario.
+
+Edit the `kratix-new-agent/kratix-new-agent.yaml` file to perform the following modifications: 
 - Change the `helm` key `.spec.source.helm.valuesObject.giteaServer.url` with the IP address of your host machine include the nodePort: `http://<HOST_IP_ADDRESS>:32223`
+- Uncomment the destination server and comment the name
 - Review the `.spec.generator.list.elements` to define the key/value for a `worker`. This step must be repeated for each cluster to be created !
 ```yaml
 spec:
@@ -107,26 +127,34 @@ spec:
             repoPath: worker-1
           #- clusterName: worker-2
           #  repoPath: worker-2
+...
+    spec:
+      project: default
+      destination:
+        # name: "{{clusterName}}" # name of the target cluster where the resources should be created
+        server: "https://kubernetes.default.svc"
+      source:
+        repoURL: cnoe://kratix-worload
+        targetRevision: HEAD
+        path: .
+        helm:
+          valuesObject:
+            ...
+            giteaServer:
+              url: http://<HOST_IP>:32223
 ```
 **Note**: Alternatively you could also duplicate the folder `kratix-new-agent` to create a new package for each cluster to be provisioned (example: kratix-new-agent-worker-1, kratix-new-agent-worker-2, etc.)
 
-So let's create now two `worker` clusters having the following ports
-
-| Name    | Ingress port | kind config file name                      |
-|---------|--------------|--------------------------------------------|
-| worker-1 | 8444         | [worker-1-8444.cfg](idp/worker-1-8444.cfg) |
-| worker-2 | 8445         | [worker-1-8445.cfg](idp/worker-1-8445.cfg) |
-
 When done, execute the following command:
 ```shell
-idpbuilder create --color --dev-password --recreate \
+idpbuilder create --color --dev-password \
   --name <WORKER_NAME> \
   --port <INGRESS_PORT> \
-  --kind-config idp/<KIND_CONFIG_FILE_NAME> \
-  -p kratix-new-agent
+  --kind-config idp/<WORKER_KIND_CONFIG_FILE> \
+  -p $PACKAGES_REPO/kratix-new-agent
 ```
 
-When the worker cluster has been created resources deployed, verify their status to check if the Application CR is sync and healthy
+When the worker cluster has been created and resources deployed, verify the status of the Argo CD Application which should be `synced` and `healthy`.
 
 ```shell
 export CONTEXT="kind-worker-1" # set CONTEXT "kind-worker-1"
@@ -149,13 +177,13 @@ Kratix `agent`, a [vcluster](https://www.vcluster.com/docs) on an existing IDPla
 Create an IDPlatform cluster, deploy kyverno and create 2 vclusters: worker-1 and worker-2
 ```shell
 idpbuilder create \
-  --kind-config kind-32223.cfg \
+  --kind-config idp/kind-32223.cfg \
   --color \
   --dev-password \
   --name idplatform \
   --port 8443 \
-  -p vcluster \
-  -p kyverno --recreate
+  -p $PACKAGES_REPO/vcluster \
+  -p $PACKAGES_REPO/kyverno --recreate
 ```
 **Note: Kyverno is used as policy engine to create secrets. We could use as alternative: [External-Secrets](https://external-secrets.io/).
 
@@ -166,9 +194,9 @@ Deploy a Kyverno policy able to Create the `TLSconfig secret` used by Argo Secre
   --dev-password \
   --name idplatform \
   --port 8443 \
-  -p vcluster \
-  -p kyverno \
-  -p kyverno-policy-secret
+  -p $PACKAGES_REPO/vcluster \
+  -p $PACKAGES_REPO/kyverno \
+  -p $PACKAGES_REPO/kyverno-policy-secret
 ```
 
 Install now the kratix pre-requisites (cert manager, etc) and kratix
@@ -178,11 +206,11 @@ Install now the kratix pre-requisites (cert manager, etc) and kratix
   --dev-password \
   --name idplatform \
   --port 8443 \
-  -p vcluster \
-  -p kyverno \
-  -p kyverno-policy-secret \
-  -p cert-manager \
-  -p kratix
+  -p $PACKAGES_REPO/vcluster \
+  -p $PACKAGES_REPO/kyverno \
+  -p $PACKAGES_REPO/kyverno-policy-secret \
+  -p $PACKAGES_REPO/cert-manager \
+  -p $PACKAGES_REPO/kratix
 ```
 
 Execute the job creating the Gitea Org `kratix` and StateStore repository `state`
@@ -192,12 +220,12 @@ Execute the job creating the Gitea Org `kratix` and StateStore repository `state
   --dev-password \
   --name idplatform \
   --port 8443 \
-  -p vcluster \
-  -p kyverno \
-  -p kyverno-policy-secret \
-  -p cert-manager \
-  -p kratix \
-  -p kratix-gitstore-job
+  -p $PACKAGES_REPO/vcluster \
+  -p $PACKAGES_REPO/kyverno \
+  -p $PACKAGES_REPO/kyverno-policy-secret \
+  -p $PACKAGES_REPO/cert-manager \
+  -p $PACKAGES_REPO/kratix \
+  -p $PACKAGES_REPO/kratix-gitstore-job
 ```
 
 Register 2 new destination(s) for `worker-1` and `worker-2` on the main cluster running kratix
@@ -207,13 +235,13 @@ Register 2 new destination(s) for `worker-1` and `worker-2` on the main cluster 
   --dev-password \
   --name idplatform \
   --port 8443 \
-  -p vcluster \
-  -p kyverno \
-  -p kyverno-policy-secret \
-  -p cert-manager \
-  -p kratix \
-  -p kratix-gitstore-job \
-  -p kratix-new-destination
+  -p $PACKAGES_REPO/vcluster \
+  -p $PACKAGES_REPO/kyverno \
+  -p $PACKAGES_REPO/kyverno-policy-secret \
+  -p $PACKAGES_REPO/cert-manager \
+  -p $PACKAGES_REPO/kratix \
+  -p $PACKAGES_REPO/kratix-gitstore-job \
+  -p $PACKAGES_REPO/kratix-new-destination
 ```  
 
 Install Argocd on each vcluster. TODO: Find a way to install argocd agent, remove non needed servers: dex, etc
@@ -244,14 +272,14 @@ Register the new agents for `worker-1` and `worker-2`.
   --dev-password \
   --name idplatform \
   --port 8443 \
-  -p vcluster \
-  -p kyverno \
-  -p kyverno-policy-secret \
-  -p cert-manager \
-  -p kratix \
-  -p kratix-gitstore-job \
-  -p kratix-new-destination \
-  -p kratix-new-agent
+  -p $PACKAGES_REPO/vcluster \
+  -p $PACKAGES_REPO/kyverno \
+  -p $PACKAGES_REPO/kyverno-policy-secret \
+  -p $PACKAGES_REPO/cert-manager \
+  -p $PACKAGES_REPO/kratix \
+  -p $PACKAGES_REPO/kratix-gitstore-job \
+  -p $PACKAGES_REPO/kratix-new-destination \
+  -p $PACKAGES_REPO/kratix-new-agent
 ```  
 
 Continue with the [How to play](#how-to-play-wit-kratix) now ;-)
