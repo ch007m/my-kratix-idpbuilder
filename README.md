@@ -391,22 +391,39 @@ postresql   Available   database   halkyon.io/v1alpha1
 kubectl get database/fruits-db
 NAME        STATUS
 fruits-db   Resource requested
-...
 
+export CONTEXT="kind-worker-1" # set CONTEXT "kind-worker-1"
+kubectl --context "$CONTEXT" get pod/fruits-db-postgresql-0
+NAME                     READY   STATUS    RESTARTS   AGE
+fruits-db-postgresql-0   1/1     Running   0          2m1s
 ```
 
 To test the connectivity with the database, connect to the `cluster` where the service has been installed and execute the commands:
 
 ```shell
-set -x POSTGRES_PASSWORD $(kubectl get secret -n kratix-requests fruits-db-postgresql -o jsonpath="{.data.password}" | base64 -d)
-kubectl run postgresql-client --rm --tty -i --restart='Never' \
-        -n kratix-requests --image docker.io/bitnami/postgresql:14.5.0-debian-11-r14 \
+export POSTGRES_PASSWORD=$(kubectl --context "$CONTEXT" get secret -n default fruits-db-postgresql -o jsonpath="{.data.password}" | base64 -d)
+export PGPASSWORD=$(kubectl --context "$CONTEXT" get secret -n default fruits-db-postgresql -o jsonpath="{.data.postgres-password}" | base64 -d)
+# set -x POSTGRES_PASSWORD $(kubectl --context "$CONTEXT" get secret -n default fruits-db-postgresql -o jsonpath="{.data.password}" | base64 -d)
+# set -x PGPASSWORD $(kubectl --context "$CONTEXT" get secret -n default fruits-db-postgresql -o jsonpath="{.data.postgres-password}" | base64 -d)
+kubectl --context "$CONTEXT" run postgresql-client --rm --tty -i --restart='Never' \
+        -n default --image docker.io/bitnami/postgresql:14.5.0-debian-11-r14 \
         --env="PGPASSWORD=$POSTGRES_PASSWORD" \
         --command -- psql --host fruits-db-postgresql -U healthy -d fruits_database -p 5432
 If you don't see a command prompt, try pressing enter.
 
 fruits_database=>
-...
+fruits_database-> \l
+                                     List of databases
+      Name       |  Owner   | Encoding |   Collate   |    Ctype    |   Access privileges   
+-----------------+----------+----------+-------------+-------------+-----------------------
+ fruits_database | healthy  | UTF8     | en_US.UTF-8 | en_US.UTF-8 | =Tc/healthy          +
+                 |          |          |             |             | healthy=CTc/healthy
+ postgres        | postgres | UTF8     | en_US.UTF-8 | en_US.UTF-8 | 
+ template0       | postgres | UTF8     | en_US.UTF-8 | en_US.UTF-8 | =c/postgres          +
+                 |          |          |             |             | postgres=CTc/postgres
+ template1       | postgres | UTF8     | en_US.UTF-8 | en_US.UTF-8 | =c/postgres          +
+                 |          |          |             |             | postgres=CTc/postgres
+(4 rows)
 ```
 
 Enjoy !
