@@ -2,43 +2,47 @@
 
 ## TODO
 
-- [ ] Merge the local packages with: `github.com/ch007m/my-idp-packages`
+- [x] Merge the local packages with: `github.com/ch007m/my-idp-packages`
 - [ ] Move the kratix and related packages to `github.com/cnoe-io/stacks`
 - [ ] Review the `HowTo` guide to separate the process to generate the resources locally for testing purposes
 - [ ] Add step to include the `matchingSelector` of the Promise
 - [ ] Mention part of the `HowTo` guide what the kratix client generated under Promise's workflow
 
-## Scenario 1: IDPlatform with multi-kind clusters
+## Introduction
 
 The purpose of this project is to demonstrate that we can use [idpbuilder](https://cnoe.io/docs/intro/idpbuilder) as IDPlatform to install [Kratix](https://docs.kratix.io) with fewer efforts as it is needed when using bash scripts or manual steps.
 
-Such a process is simplified as the tool `idpbuilder` allows a user to create locally a kind cluster embedding: Argo CD, Gitea and Nginx ingress 
-and where we can easily deploy Kratix.
+Such a process is simplified as the tool `idpbuilder` allows a user to create locally a kind cluster embedding: Argo CD, Gitea and Ingress Nginx and where we can easily deploy Kratix.
 
-For that purpose, different Argo CD Applications manifests have been created under the path `idp/<PACKAGE_NAME>` in order to provision the cluster with the following packages:
-- `foundation`: installing the mandatory components like: cert-manager, ...
-- `kratix`: Deploy the kratix's controller; some default `Destination` and `GitstateStore` resources and register on the gitea server a new git organization: `kratix` and repository: `state`
+For that purpose, different `packages` containing Argo CD Application(Set) files, manifests, helm chart, etc. have been created within a Git repository in order to provision the IDPlatform.
 
-To create such an IDPlatform, execute the following command creating a kind cluster using the following ports:
+To use the scenario 1 or 2, it is then needed first to git clone the following project or to fork it:
+```shell
+git clone https://github.com/ch007m/my-idp-packages; cd my-idp-packages
+```
+**Note**: If you fork it, then you can create a new branch to push your local changes when you will modify the Argo Application(Set) files of the packages to customize the Helm values, etc 
 
-| Name              | Ingress port | Gitea HTTP port | Gitea SSH port | kind config file name                                              |
-|-------------------|--------------|-----------------|----------------|--------------------------------------------------------------------|
+## Scenario 1: IDPlatform with multi-kind clusters
+
+To create a Kratix - IDPlatform, you will then execute the following command able to create a kind cluster exposing different ports listed hereafter. The HTTP port of the Gitea Server is also mapped to a container engine port and can be accessed using either the NodePort: `http://<HOST_IP_ADDRESS>:32223` or Ingress route: `https://gitea.cnoe.localtest.me:8443`.
+
+| Name              | Ingress port | Gitea HTTP port | Gitea SSH port | kind config file name                          |
+|-------------------|--------------|-----------------|----------------|------------------------------------------------|
 | Kratix IDPlatform | 8443         | 32223           | 32222          | [kratix-idp-8443.cfg](idp/kratix-idp-8443.cfg) |
 
+As you can see, we pass as arguments different packages to install: cert-manager, kratix controller, etc. The purpose of the package `kratix-gitstore-job` as documented on the git repository package is to create a new Git organization `kratix` and repository `state` under the Gitea server and to deploy the `GitStateStore` resource. 
 ```shell
 idpbuilder create --color --dev-password \
   --name kratix \
   --port 8443 \
   --kind-config idp/kratix-idp-8443.cfg \
-  -p idp/foundation \
-  -p idp/kratix
+  -p cert-manager \
+  -p kratix \
+  -p kratix-gitstore-job
 ```
-
 **IMPORTANT**: The previous command will only work if you use a version of idpbuilder >= [0.10](https://github.com/cnoe-io/idpbuilder/releases/tag/v0.10.0-nightly.20250407)
 
-**TODO**: Convert the `idp/kratix` resources folder into a helm chart able to configure path of the resources, URL of the gitea server, destination's labels, etc
-
-When done, you can access the Argo CD: https://argocd.cnoe.localtest.me:8443 or Gitea - https://gitea.cnoe.localtest.me:8443 dashboards using the following credentials:
+When created, you can access the Argo CD: https://argocd.cnoe.localtest.me:8443 or Gitea - https://gitea.cnoe.localtest.me:8443 dashboards using the following credentials:
 ```shell
 ❯ idp get secrets
 NAME                          NAMESPACE   USERNAME     PASSWORD    TOKEN                                      DATA
@@ -46,54 +50,86 @@ argocd-initial-admin-secret   argocd      admin        developer
 gitea-credential              gitea       giteaAdmin   developer   34d333ee4330d441c3da782fd4bc443a848e5a1b   
 ```
 
-To simulate a more natural environment running in a company, we will now create some additional clusters representing either the `dev`, `test` and `prod` machines or different machines created for: `team-1`, `team-2` having different needs, services that kratix can deal with using `Promises` and `requests`.
+To simulate a more natural environment running in a company, we will now create some additional clusters representing either the `dev`, `test` and `prod` environments or machines created for teams/projects: `team-1`, `team-2` having different needs, services that kratix can deal with using `Promises` and `Requests`.
 
-For that purpose we will create some additional clusters using the `idpbuilder` tool. 
+Prior to create a new cluster, it is needed first to register on the Kratix IDPlatform the new `Destination`, one for each `worker` cluster.
 
-But prior to create a new cluster, it is needed first to register on Kratix the new Destination, one for each worker cluster.
+To achieve this goal we will install a new package on the cluster using the helm chart `kratix-new-destination` able to:
+- Generate the `Destination` 
+- Install a kubernetes job responsible to create the folders `dependencies` and `resources` for a new destination (aka worker) on the GitStateStore
 
-To achieve this goal we will install a new idpbuilder package on the cluster using the helm chart `kratix-new-destination` able to:
-- Populate the needed resources
-- Execute a kubernetes job executing some `gitea curl commands` to create the folders `dependencies` and `resources` for a worker on the GitStateStore
+**Note**: The package `kratix-new-destination` uses an [ApplicationSet](idp/kratix-new-destination/kratix-new-destination.yaml) resource able to create an Argo CD Application for each needed `worker` cluster. Feel free to review the ApplicationSet file to add more workers, change the labels, etc
 
-**Note**: The package `kratix-new-destination` uses an [ApplicationSet](idp/kratix-new-destination/kratix-new-destination.yaml) resource able to create an Argo CD Application for each needed worker cluster. Feel free to review the ApplicationSet file to add more workers, change the labels, etc
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: kratix-new-destination
+  namespace: argocd
+spec:
+  generators:
+    - list:
+        elements:
+          - clusterName: worker-1
+            repoPath: worker-1
+            environment: dev
+            team: team-a
+          - clusterName: worker-2
+            repoPath: worker-2
+            environment: test
+            team: team-b
+...
+```
+
+When the file has been reviewed and is ready, you can install the package using the command:
 
 ```shell
 idpbuilder create --color --dev-password \
   --name kratix \
   --port 8443 \
   --kind-config idp/kratix-idp-8443.cfg \
-  -p idp/foundation \
-  -p idp/kratix \
+  -p cert-manager \
+  -p kratix \
   -p idp/kratix-new-destination
 ```
 
-So let's create now some worker clusters having the following ports
+As the package `kratix-new-agent` that we will use to provision a cluster has been designed as an Argo CD ApplicationSet file, it is needed to perform some changes in order to set up properly the `worker` clusters for this scenario.
+
+Edit the file to perform the following modifications: 
+- Change the `helm` key `.spec.source.helm.valuesObject.giteaServer.url` with the IP address of your host machine include the nodePort: `http://<HOST_IP_ADDRESS>:32223`
+- Review the `.spec.generator.list.elements` to define the key/value for a `worker`. This step must be repeated for each cluster to be created !
+```yaml
+spec:
+  generators:
+    - list:
+        elements:
+          - clusterName: worker-1
+            repoPath: worker-1
+          #- clusterName: worker-2
+          #  repoPath: worker-2
+```
+**Note**: Alternatively you could also duplicate the folder `kratix-new-agent` to create a new package for each cluster to be provisioned (example: kratix-new-agent-worker-1, kratix-new-agent-worker-2, etc.)
+
+So let's create now two `worker` clusters having the following ports
 
 | Name    | Ingress port | kind config file name                      |
 |---------|--------------|--------------------------------------------|
-| worker1 | 8444         | [worker-1-8444.cfg](idp/worker-1-8444.cfg) |
-| worker2 | 8445         | [worker-1-8445.cfg](idp/worker-1-8445.cfg) |
+| worker-1 | 8444         | [worker-1-8444.cfg](idp/worker-1-8444.cfg) |
+| worker-2 | 8445         | [worker-1-8445.cfg](idp/worker-1-8445.cfg) |
 
-As the gitea server is running on the Kratix IDPlatform at the following address: `http://<HOST_IP_ADDRESS>:32223`, we will have to patch the Application CR of the `kratix-agent` before to deploy. Execute then this command before to create the different workers 
-
-```shell
-yq e '.spec.source.helm.valuesObject.giteaServer.url = "http://<HOST_IP_ADDRESS>:32223"' -i idp/kratix-agent/kratix-agent.yaml
-```
-
-When done, execute the following command respectively for the `worker1` and `worker2`
+When done, execute the following command:
 ```shell
 idpbuilder create --color --dev-password --recreate \
   --name <WORKER_NAME> \
   --port <INGRESS_PORT> \
   --kind-config idp/<KIND_CONFIG_FILE_NAME> \
-  -p idp/kratix-agent
+  -p kratix-new-agent
 ```
 
-When the cluster has been created and Applications deployed, verify their status to check if the Application CR is sync and healthy
+When the worker cluster has been created resources deployed, verify their status to check if the Application CR is sync and healthy
 
 ```shell
-export CONTEXT="kind-worker1" # set CONTEXT "kind-worker-1"
+export CONTEXT="kind-worker-1" # set CONTEXT "kind-worker-1"
 kubectl --context "$CONTEXT" -n argocd get application -lcluster=worker-1
 NAME                                    SYNC STATUS   HEALTH STATUS
 kratix-workload-worker-1-dependencies   Synced        Healthy
@@ -103,18 +139,12 @@ If Argocd is able to watch resources from the kratix IDPlatform gitea server und
 
 Enjoy ;-)
 
-
 ## Scenario 2: IDPlatform and vclusters as alternative
 
 Instead of using several kind clusters running as IDPlatform, you can also follow these instructions where we add as new
 Kratix `agent`, a [vcluster](https://www.vcluster.com/docs) on an existing IDPlatform.
 
 ### Instructions
-
-Git clone the project: https://github.com/ch007m/my-idp-packages
-```shell
-git clone https://github.com/ch007m/my-idp-packages; cd my-idp-packages
-```
 
 Create an IDPlatform cluster, deploy kyverno and create 2 vclusters: worker-1 and worker-2
 ```shell
