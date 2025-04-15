@@ -1,5 +1,13 @@
 # Kratix and idpbuilder
 
+## TODO
+
+- [ ] Merge the local packages with: `github.com/ch007m/my-idp-packages`
+- [ ] Move the kratix and related packages to `github.com/cnoe-io/stacks`
+- [ ] Review the `HowTo` guide to separate the process to generate the resources locally for testing purposes
+- [ ] Add step to include the `matchingSelector` of the Promise
+- [ ] Mention part of the `HowTo` guide what the kratix client generated under Promise's workflow
+
 ## Scenario 1: IDPlatform with multi-kind clusters
 
 The purpose of this project is to demonstrate that we can use [idpbuilder](https://cnoe.io/docs/intro/idpbuilder) as IDPlatform to install [Kratix](https://docs.kratix.io) with fewer efforts as it is needed when using bash scripts or manual steps.
